@@ -1,0 +1,2228 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.549">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Matthew Hung">
+<meta name="dcterms.date" content="2024-10-24">
+
+<title>Single-Cell Workbook - 3&nbsp; CellRanger (Multi)</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../sections/1_processing/1.2_seurat.html" rel="next">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+</head>
+
+<body class="nav-sidebar docked">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../sections/1_processing/1.1_cellranger.html"><strong>Chapter 1 : Data Processing</strong></a></li><li class="breadcrumb-item"><a href="../../sections/1_processing/1.1_cellranger.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">CellRanger (Multi)</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-center sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../../">Single-Cell Workbook</a> 
+        <div class="sidebar-tools-main">
+    <div class="dropdown">
+      <a href="" title="" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" aria-label=""><i class="bi bi-github"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/mshung229/scworkbook/">
+            Report A Bug
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/mshung229">
+            Follow Me
+            </a>
+          </li>
+      </ul>
+    </div>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><b>Preface</b></span></a>
+  </div>
+</li>
+        <li class="px-0"><hr class="sidebar-divider hi "></li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text"><strong>Chapter 0 : Introduction</strong></span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sections/0_introduction/0.1_installation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Installation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sections/0_introduction/0.2_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Data Description</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="px-0"><hr class="sidebar-divider hi "></li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text"><strong>Chapter 1 : Data Processing</strong></span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sections/1_processing/1.1_cellranger.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">CellRanger (Multi)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sections/1_processing/1.2_seurat.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Seurat Object</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sections/1_processing/1.3_demux.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Cell Demultiplexing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sections/1_processing/1.4_doublets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Doublet Detection</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sections/1_processing/1.5_decont.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">RNA Contamination</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sections/1_processing/1.6_qc.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Quality Control</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="px-0"><hr class="sidebar-divider hi "></li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true">
+ <span class="menu-text"><strong>Chapter 2 : Cell Classification</strong></span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sections/2_cellclassification/2.1_sctransform.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">SCTransform</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="1">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#motivation" id="toc-motivation" class="nav-link active" data-scroll-target="#motivation">Motivation</a></li>
+  <li><a href="#retrieve-raw-sequencing-files" id="toc-retrieve-raw-sequencing-files" class="nav-link" data-scroll-target="#retrieve-raw-sequencing-files"><span class="header-section-number">3.1</span> Retrieve Raw Sequencing Files</a>
+  <ul class="collapse">
+  <li><a href="#sequencing-run-identifiers" id="toc-sequencing-run-identifiers" class="nav-link" data-scroll-target="#sequencing-run-identifiers"><span class="header-section-number">3.1.1</span> Sequencing Run Identifiers</a></li>
+  <li><a href="#download-with-sra-toolkit" id="toc-download-with-sra-toolkit" class="nav-link" data-scroll-target="#download-with-sra-toolkit"><span class="header-section-number">3.1.2</span> Download with SRA Toolkit</a></li>
+  </ul></li>
+  <li><a href="#multi-pipeline-configurations" id="toc-multi-pipeline-configurations" class="nav-link" data-scroll-target="#multi-pipeline-configurations"><span class="header-section-number">3.2</span> Multi-Pipeline Configurations</a>
+  <ul class="collapse">
+  <li><a href="#step1---fastqformat.sh" id="toc-step1---fastqformat.sh" class="nav-link" data-scroll-target="#step1---fastqformat.sh"><font color="grey">Step1 -</font> fastqformat.sh</a></li>
+  <li><a href="#step2---batch_id.txt" id="toc-step2---batch_id.txt" class="nav-link" data-scroll-target="#step2---batch_id.txt"><font color="grey">Step2 -</font> batch_id.txt</a></li>
+  <li><a href="#step3---configure.csv" id="toc-step3---configure.csv" class="nav-link" data-scroll-target="#step3---configure.csv"><font color="grey">Step3 -</font> configure.csv</a></li>
+  <li><a href="#step4---feature_reference.csv" id="toc-step4---feature_reference.csv" class="nav-link" data-scroll-target="#step4---feature_reference.csv"><font color="grey">Step4 -</font> feature_reference.csv</a></li>
+  <li><a href="#step5---library.csv" id="toc-step5---library.csv" class="nav-link" data-scroll-target="#step5---library.csv"><font color="grey">Step5 -</font> library.csv</a></li>
+  <li><a href="#step6---batch.sh" id="toc-step6---batch.sh" class="nav-link" data-scroll-target="#step6---batch.sh"><font color="grey">Step6 -</font> batch.sh</a></li>
+  <li><a href="#step7---multi.sh" id="toc-step7---multi.sh" class="nav-link" data-scroll-target="#step7---multi.sh"><font color="grey">Step7 -</font> multi.sh</a></li>
+  </ul></li>
+  <li><a href="#session-info" id="toc-session-info" class="nav-link" data-scroll-target="#session-info">Session Info</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../sections/1_processing/1.1_cellranger.html"><strong>Chapter 1 : Data Processing</strong></a></li><li class="breadcrumb-item"><a href="../../sections/1_processing/1.1_cellranger.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">CellRanger (Multi)</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">CellRanger (Multi)</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Matthew Hung </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">2024-10-24</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="motivation" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="motivation">Motivation</h2>
+<p>Introduction to CellRanger</p>
+<div id="cell-2" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="do">## setup environment</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressMessages</span>({</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)})</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="do">## function to print contents</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>cat_content <span class="ot">&lt;-</span> <span class="cf">function</span>(dir, <span class="at">n =</span> <span class="sc">-</span><span class="dv">1</span>L){</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    content <span class="ot">&lt;-</span> <span class="fu">readLines</span>(dir, <span class="at">n =</span> n, <span class="at">warn =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(content, <span class="at">sep =</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="retrieve-raw-sequencing-files" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="retrieve-raw-sequencing-files"><span class="header-section-number">3.1</span> Retrieve Raw Sequencing Files</h2>
+<p>In this section, we will download the relevant sequencing samples (CV10, CV12) highlighted in <span class="quarto-unresolved-ref">?sec-Introduction</span> with the respective BioProject ID : <a href="">PRJNA1040901</a> &amp; <a href="">PRJNA1040899</a>. Since the raw sequencing files are deposited in Sequencing Read Archive (SRA), we can use the SRA Toolkit to directly transfer data from cloud server to local/remote host.</p>
+<section id="sequencing-run-identifiers" class="level3" data-number="3.1.1">
+<h3 data-number="3.1.1" class="anchored" data-anchor-id="sequencing-run-identifiers"><span class="header-section-number">3.1.1</span> Sequencing Run Identifiers</h3>
+<p>Before we can proceed with the download, SRA Toolkit needs the sequencing run identifiers for each sample, which typically has a prefix starting with “SRR”. With multi-omic data, one sequencing run identifier will be generated for each sequencing library (GEX, ADT, BCR, TCR etc.). To retrieve the relevant identifiers, we downloaded the <a href="https://www.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA1040888&amp;o=acc_s%3Aa">[SraRunTable.txt]</a> file for this study from NIH SRA Run Selector.</p>
+<div id="cell-6" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>fs<span class="sc">::</span><span class="fu">dir_tree</span>(<span class="at">path =</span> <span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/"</span>, <span class="at">recurse =</span> <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/
+├── cellranger
+├── logs
+└── raw_fastq</code></pre>
+</div>
+</div>
+<div id="cell-7" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>fs<span class="sc">::</span><span class="fu">dir_tree</span>(<span class="at">path =</span> <span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input
+├── GSE247910_ADT_HTO_details_README.txt
+├── GSE247912_ADT_HTO_details_README.txt
+├── SRR_Acc_List.txt
+└── SraRunTable.txt</code></pre>
+</div>
+</div>
+<p>As you can see from the SraRunTable.txt file below, sequencing run identifiers and BioProject IDs are stored in the &lt;Run&gt; and &lt;BioProject&gt; columns. Next we will get the relevant sequencing run identifiers from the SraRunTable.txt file below and store these as a .txt file.</p>
+<div id="cell-9" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="do">## see structure of SraRunTable.txt</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>sra <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input/SraRunTable.txt"</span>, <span class="at">sep =</span> <span class="st">","</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(sra)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   96 obs. of  34 variables:
+ $ Run                           : chr  "SRR26852594" "SRR26852595" "SRR26852596" "SRR26852597" ...
+ $ Assay.Type                    : chr  "OTHER" "OTHER" "OTHER" "OTHER" ...
+ $ AvgSpotLen                    : int  160 160 152 160 160 152 161 161 128 160 ...
+ $ Bases                         : num  3.98e+08 6.37e+08 4.72e+08 3.78e+09 5.25e+08 ...
+ $ BioProject                    : chr  "PRJNA1040889" "PRJNA1040889" "PRJNA1040889" "PRJNA1040889" ...
+ $ BioSample                     : chr  "SAMN38270931" "SAMN38270932" "SAMN38270933" "SAMN38270934" ...
+ $ Bytes                         : num  1.62e+08 2.57e+08 1.94e+08 1.54e+09 2.13e+08 ...
+ $ cell_type                     : chr  "PBMCs" "PBMCs" "PBMCs" "PBMCs" ...
+ $ Center.Name                   : chr  "KORALOV, PATHOLOGY, NYU LANGONE" "KORALOV, PATHOLOGY, NYU LANGONE" "KORALOV, PATHOLOGY, NYU LANGONE" "KORALOV, PATHOLOGY, NYU LANGONE" ...
+ $ Collection_Date               : chr  "missing" "missing" "missing" "missing" ...
+ $ Consent                       : chr  "public" "public" "public" "public" ...
+ $ DATASTORE.filetype            : chr  "fastq,run.zq,sra" "fastq,run.zq,sra" "fastq,run.zq,sra" "fastq,run.zq,sra" ...
+ $ DATASTORE.provider            : chr  "gs,ncbi,s3" "gs,ncbi,s3" "gs,ncbi,s3" "gs,ncbi,s3" ...
+ $ DATASTORE.region              : chr  "gs.us-east1,ncbi.public,s3.us-east-1" "gs.us-east1,ncbi.public,s3.us-east-1" "gs.us-east1,ncbi.public,s3.us-east-1" "gs.us-east1,ncbi.public,s3.us-east-1" ...
+ $ Experiment                    : chr  "SRX22547979" "SRX22547978" "SRX22547977" "SRX22547976" ...
+ $ geo_loc_name_country          : chr  "uncalculated" "uncalculated" "uncalculated" "uncalculated" ...
+ $ geo_loc_name_country_continent: chr  "uncalculated" "uncalculated" "uncalculated" "uncalculated" ...
+ $ geo_loc_name                  : chr  "missing" "missing" "missing" "missing" ...
+ $ Instrument                    : chr  "NextSeq 500" "NextSeq 500" "NextSeq 500" "NextSeq 500" ...
+ $ Library.Name                  : chr  "GSM7902898" "GSM7902897" "GSM7902896" "GSM7902895" ...
+ $ library_type                  : chr  "TCRgd" "TCRab" "HTO" "GEX" ...
+ $ LibraryLayout                 : chr  "PAIRED" "PAIRED" "PAIRED" "PAIRED" ...
+ $ LibrarySelection              : chr  "other" "other" "other" "other" ...
+ $ LibrarySource                 : chr  "TRANSCRIPTOMIC" "TRANSCRIPTOMIC" "OTHER" "TRANSCRIPTOMIC" ...
+ $ Organism                      : chr  "Homo sapiens" "Homo sapiens" "Homo sapiens" "Homo sapiens" ...
+ $ Platform                      : chr  "ILLUMINA" "ILLUMINA" "ILLUMINA" "ILLUMINA" ...
+ $ ReleaseDate                   : chr  "2023-11-21T00:00:00Z" "2023-11-21T00:00:00Z" "2023-11-21T00:00:00Z" "2023-11-21T00:00:00Z" ...
+ $ create_date                   : chr  "2023-11-16T14:45:00Z" "2023-11-16T14:46:00Z" "2023-11-16T14:45:00Z" "2023-11-16T14:58:00Z" ...
+ $ version                       : int  1 1 1 1 1 1 1 1 1 1 ...
+ $ Sample.Name                   : chr  "GSM7902898" "GSM7902897" "GSM7902896" "GSM7902895" ...
+ $ source_name                   : chr  "PBMCs" "PBMCs" "PBMCs" "PBMCs" ...
+ $ SRA.Study                     : chr  "SRP472368" "SRP472368" "SRP472368" "SRP472368" ...
+ $ tissue                        : chr  "PBMCs" "PBMCs" "PBMCs" "PBMCs" ...
+ $ treatment                     : chr  "COVID-19" "COVID-19" "COVID-19" "COVID-19" ...</code></pre>
+</div>
+</div>
+<div id="cell-10" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># select CV10, CV12</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>select <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"PRJNA1040901"</span>, <span class="st">"PRJNA1040899"</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>sra <span class="ot">&lt;-</span> sra <span class="sc">%&gt;%</span> <span class="fu">filter</span>(BioProject <span class="sc">%in%</span> select) <span class="sc">%&gt;%</span> <span class="fu">select</span>(BioProject, Run, library_type, treatment)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>sra</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true">
+<caption>A data.frame: 10 × 4</caption>
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th" scope="col">BioProject</th>
+<th data-quarto-table-cell-role="th" scope="col">Run</th>
+<th data-quarto-table-cell-role="th" scope="col">library_type</th>
+<th data-quarto-table-cell-role="th" scope="col">treatment</th>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>PRJNA1040901</td>
+<td>SRR26844707</td>
+<td>TCRgd</td>
+<td>COVID-19</td>
+</tr>
+<tr class="even">
+<td>PRJNA1040901</td>
+<td>SRR26844708</td>
+<td>TCRab</td>
+<td>COVID-19</td>
+</tr>
+<tr class="odd">
+<td>PRJNA1040901</td>
+<td>SRR26844709</td>
+<td>GEX</td>
+<td>COVID-19</td>
+</tr>
+<tr class="even">
+<td>PRJNA1040901</td>
+<td>SRR26844710</td>
+<td>BCR</td>
+<td>COVID-19</td>
+</tr>
+<tr class="odd">
+<td>PRJNA1040901</td>
+<td>SRR26844711</td>
+<td>ADT</td>
+<td>COVID-19</td>
+</tr>
+<tr class="even">
+<td>PRJNA1040899</td>
+<td>SRR26844884</td>
+<td>TCRgd</td>
+<td>SARS-CoV-2 vaccine</td>
+</tr>
+<tr class="odd">
+<td>PRJNA1040899</td>
+<td>SRR26844885</td>
+<td>TCRab</td>
+<td>SARS-CoV-2 vaccine</td>
+</tr>
+<tr class="even">
+<td>PRJNA1040899</td>
+<td>SRR26844886</td>
+<td>GEX</td>
+<td>SARS-CoV-2 vaccine</td>
+</tr>
+<tr class="odd">
+<td>PRJNA1040899</td>
+<td>SRR26844887</td>
+<td>BCR</td>
+<td>SARS-CoV-2 vaccine</td>
+</tr>
+<tr class="even">
+<td>PRJNA1040899</td>
+<td>SRR26844888</td>
+<td>ADT</td>
+<td>SARS-CoV-2 vaccine</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="cell-11" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="do">## store identifiers per line in a txt file</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">write.table</span>(sra<span class="sc">$</span>Run, <span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input/SRR_Acc_List.txt"</span>, <span class="at">col.names =</span> F, <span class="at">row.names =</span> F, <span class="at">quote =</span> F)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat_content</span>(<span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input/SRR_Acc_List.txt"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>SRR26844707
+SRR26844708
+SRR26844709
+SRR26844710
+SRR26844711
+SRR26844884
+SRR26844885
+SRR26844886
+SRR26844887
+SRR26844888</code></pre>
+</div>
+</div>
+</section>
+<section id="download-with-sra-toolkit" class="level3" data-number="3.1.2">
+<h3 data-number="3.1.2" class="anchored" data-anchor-id="download-with-sra-toolkit"><span class="header-section-number">3.1.2</span> Download with SRA Toolkit</h3>
+<p>To download each sequencing library with run identifier, we used the fasterq-dump command from SRA Toolkit with parallelization to speed up the process of download. Adding the –split-files argument is essential for majority 10X sequencing, as downstream pipeline requires forward and reverse strand reads to be kept in separate fastq files. Below is a bash script to perform the download.</p>
+<div id="cell-13" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="do">## show contents of sra toolkit script</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat_content</span>(<span class="st">"/camp/home/hungm/nemo-pipelines/datarepo/sratools/sratools.sh"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#!/bin/bash
+#SBATCH --job-name=sratools
+#SBATCH --ntasks=32
+#SBATCH --cpus-per-task=1
+#SBATCH --time=7-00:00:0
+#SBATCH --mem=200G
+#SBATCH --partition=ncpu
+#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-user=matthew.hung@crick.ac.uk
+
+############## edit the following ##################
+export accession=matthew/MH_GSE247917
+export PRJ=/camp/home/hungm/scratch/hungm/${accession}
+#####################################################
+
+source /camp/home/hungm/nemo-pipelines/piplog.sh
+
+which fasterq-dump
+mkdir -p ${PRJ}/raw_fastq/
+cd ${PRJ}/raw_fastq/
+for i in $(cat ${PRJ}/input/SRR_Acc_List.txt);
+    do ~/.conda/envs/sratools/bin/fasterq-dump $i -e 32 --include-technical --split-files;
+    for j in i ; 
+        do gzip ${i}*.fastq ; 
+    done; 
+done</code></pre>
+</div>
+</div>
+<div id="cell-14" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="39">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="do">## submit bash script to download raw fastq files</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system</span>(<span class="st">"cd /camp/home/hungm/nemo-pipelines/datarepo/sratools/; sbatch sratools.sh"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The fastq files are now downloaded to the following directory.</p>
+<div id="cell-16" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>fs<span class="sc">::</span><span class="fu">dir_tree</span>(<span class="at">path =</span> <span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq
+├── SRR26844707_1.fastq.gz
+├── SRR26844707_2.fastq.gz
+├── SRR26844707_3.fastq.gz
+├── SRR26844708_1.fastq.gz
+├── SRR26844708_2.fastq.gz
+├── SRR26844708_3.fastq.gz
+├── SRR26844709_1.fastq.gz
+├── SRR26844709_2.fastq.gz
+├── SRR26844709_3.fastq.gz
+├── SRR26844710_1.fastq.gz
+├── SRR26844710_2.fastq.gz
+├── SRR26844710_3.fastq.gz
+├── SRR26844711_1.fastq.gz
+├── SRR26844711_2.fastq.gz
+├── SRR26844884_1.fastq.gz
+├── SRR26844884_2.fastq.gz
+├── SRR26844884_3.fastq.gz
+├── SRR26844885_1.fastq.gz
+├── SRR26844885_2.fastq.gz
+├── SRR26844885_3.fastq.gz
+├── SRR26844886_1.fastq.gz
+├── SRR26844886_2.fastq.gz
+├── SRR26844886_3.fastq.gz
+├── SRR26844887_1.fastq.gz
+├── SRR26844887_2.fastq.gz
+├── SRR26844887_3.fastq.gz
+├── SRR26844888_1.fastq.gz
+└── SRR26844888_2.fastq.gz</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="multi-pipeline-configurations" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="multi-pipeline-configurations"><span class="header-section-number">3.2</span> Multi-Pipeline Configurations</h2>
+<p>We have setup a reference pipeline/system [see <a href="">GitHub</a>] to run cellranger-multi (V7.0.1). Below are the purpose of each file :</p>
+<blockquote class="blockquote">
+<ul>
+<li>batch.sh - a bash script to setup config.csv and multi.sh for each sequencing sample</li>
+<li>batch_id.txt - a txt file containing names of each sequencing sample</li>
+<li>config.csv - configuration file for cellranger-multi [see <a href="">cellranger-multi</a>]</li>
+<li>fastqformat.sh - rename fastq files for cellranger [see <a href="">cellranger fastq names</a>]</li>
+<li>features_reference.csv - a reference configuration file for feature barcoding [see <a href="">feature barcoding</a>)]</li>
+<li>library.csv - a reference configuration file for config.csv [library] section</li>
+<li>multi.sh - a bash script to run cellranger-multi command</li>
+<li>tcrgd_primers.txt - default TCR-GD primer (5P v1.1) library [see <a href="https://kb.10xgenomics.com/hc/en-us/articles/360015793931-Can-I-detect-T-cells-with-gamma-delta-chains-in-my-V-D-J-data">TCR-GD primers</a>]</li>
+</ul>
+</blockquote>
+<div id="cell-18" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>fs<span class="sc">::</span><span class="fu">dir_tree</span>(<span class="at">path =</span> <span class="st">"/camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>/camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/
+├── batch.sh
+├── batch_id.txt
+├── config.csv
+├── fastqformat.sh
+├── feature_reference.csv
+├── library.csv
+├── multi.sh
+├── readme.txt
+└── tcrgd_primers.txt</code></pre>
+</div>
+</div>
+<p>Outline below are the steps to run cellranger-multi for multiple sequencing samples with the system :</p>
+<blockquote class="blockquote">
+<ol type="1">
+<li>Rename fastq files to appropriate names with “fastqformat.sh”</li>
+<li>Specify sequencing sample names in “batch_id.txt” file</li>
+<li>Set up “config.csv” and specify paths for reference genomes</li>
+<li>Set correct oligo tag/sequence for “feature_reference.csv” if necesary</li>
+<li>Set correct library paths for “library.csv” if necesary</li>
+<li>Modify script and run “source batch.sh” to setup scripts per sample</li>
+<li>Final check and run “sbatch */multi.sh” to submit jobs</li>
+</ol>
+</blockquote>
+<section id="step1---fastqformat.sh" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="step1---fastqformat.sh"><font color="grey">Step1 -</font> fastqformat.sh</h3>
+<p>For cellranger to read the fastq files properly, the names of the fastq files need modification. To do so the fastqformat.sh script does the renaming automatically for 10X fastqs downloaded from SRA.</p>
+<div id="cell-21" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="do">## show fastqformat.sh</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat_content</span>(<span class="st">'/camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/fastqformat.sh'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>for file in *_1.fastq.gz; do
+  newname=$(echo "$file" | sed 's/_1.fastq.gz/_S1_R1_001.fastq.gz/')
+  mv "$file" "$newname"
+done
+
+for file in *_2.fastq.gz; do
+  newname=$(echo "$file" | sed 's/_2.fastq.gz/_S1_R2_001.fastq.gz/')
+  mv "$file" "$newname"
+done
+
+for file in *_3.fastq.gz; do
+  newname=$(echo "$file" | sed 's/_3.fastq.gz/_S1_I1_001.fastq.gz/')
+  mv "$file" "$newname"
+done
+
+for file in *_4.fastq.gz; do
+  newname=$(echo "$file" | sed 's/_4.fastq.gz/_S1_I2_001.fastq.gz/')
+  mv "$file" "$newname"
+done</code></pre>
+</div>
+</div>
+<div id="cell-22" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="do">## separate ADT libraries</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system</span>(<span class="st">"</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="st">    cd /camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/ </span><span class="sc">\n</span><span class="st"> </span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="st">    mkdir ADT </span><span class="sc">\n</span><span class="st"> </span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="st">    mv SRR26844888* ADT </span><span class="sc">\n</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="st">    mv SRR26844711* ADT </span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-23" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="do">## View ADT fastq R1</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system</span>(<span class="st">"</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="st">zcat /camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/ADT/SRR26844711_1.fastq.gz | head -n 3;</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="st">zcat /camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/ADT/SRR26844711_2.fastq.gz | head -n 3"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><span class="citation" data-cites="SRR26844711.1">@SRR26844711.1</span> A01581:168:HCWFHDRX2:1:2101:1108:1000 length=28<br>
+GNCCTCAAGCTTTGGTTCGTTAGCGTCT<br>
++SRR26844711.1 A01581:168:HCWFHDRX2:1:2101:1108:1000 length=28<br>
+F#FFFFFFFFF:FFFFFFFFFFFFFF,,<br>
+<span class="citation" data-cites="SRR26844711.2">@SRR26844711.2</span> A01581:168:HCWFHDRX2:1:2101:1127:1000 length=28</p>
+<p><span class="citation" data-cites="SRR26844711.1">@SRR26844711.1</span> A01581:168:HCWFHDRX2:1:2101:1108:1000 length=90<br>
+NAGCTCCGTCCTCCGAATCATGTTGGTAAACACGCCCATATAAGAAAACGCTAACGAACCAAAGCTTGAGGACAGATCGGAAGAGAGTCG<br>
++SRR26844711.1 A01581:168:HCWFHDRX2:1:2101:1108:1000 length=90<br>
+#FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:,:FFFFFFFFFFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFF,FFFFFFFFFF,<br>
+<span class="citation" data-cites="SRR26844711.2">@SRR26844711.2</span> A01581:168:HCWFHDRX2:1:2101:1127:1000 length=90</p>
+<div id="cell-25" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="do">## execute script</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system</span>(<span class="st">"</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="st">    cd /camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/ADT </span><span class="sc">\n</span><span class="st"> </span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="st">    source /camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/fastqformat.sh </span><span class="sc">\n</span><span class="st"> </span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="st">    mv * .. </span><span class="sc">\n</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="st">    cd /camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/ </span><span class="sc">\n</span><span class="st"> </span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="st">    rm -r ADT</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="st">    "</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-26" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>zcat <span class="sc">/</span>camp<span class="sc">/</span>home<span class="sc">/</span>hungm<span class="sc">/</span>scratch<span class="sc">/</span>hungm<span class="sc">/</span>matthew<span class="sc">/</span>MH_GSE247917<span class="sc">/</span>raw_fastq<span class="sc">/</span>SRR26844709_1.fastq.gz <span class="sc">|</span> head <span class="sc">-</span>n <span class="dv">5</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>zcat <span class="sc">/</span>camp<span class="sc">/</span>home<span class="sc">/</span>hungm<span class="sc">/</span>scratch<span class="sc">/</span>hungm<span class="sc">/</span>matthew<span class="sc">/</span>MH_GSE247917<span class="sc">/</span>raw_fastq<span class="sc">/</span>SRR268447_2.fastq.gz <span class="sc">|</span> head <span class="sc">-</span>n <span class="dv">5</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>zcat <span class="sc">/</span>camp<span class="sc">/</span>home<span class="sc">/</span>hungm<span class="sc">/</span>scratch<span class="sc">/</span>hungm<span class="sc">/</span>matthew<span class="sc">/</span>MH_GSE247917<span class="sc">/</span>raw_fastq<span class="sc">/</span>SRR26844710_3.fastq.gz <span class="sc">|</span> head <span class="sc">-</span>n <span class="dv">5</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><span class="citation" data-cites="SRR26844710.1">@SRR26844710.1</span> A01581:167:HCG2TDMXY:1:1101:1262:1016 length=10<br>
+NCAGTAACTA<br>
++SRR26844710.1 A01581:167:HCG2TDMXY:1:1101:1262:1016 length=10<br>
+#F:FFFFFFF<br>
+<span class="citation" data-cites="SRR26844710.2">@SRR26844710.2</span> A01581:167:HCG2TDMXY:1:1101:1606:1016 length=10</p>
+<p><span class="citation" data-cites="SRR26844710.1">@SRR26844710.1</span> A01581:167:HCG2TDMXY:1:1101:1262:1016 length=28<br>
+ANGGCCATCGTTACAGAGCCTCAATCTT<br>
++SRR26844710.1 A01581:167:HCG2TDMXY:1:1101:1262:1016 length=28<br>
+F#FFFFFFFFFFFFFFFFFFFFFFFFFF<br>
+<span class="citation" data-cites="SRR26844710.2">@SRR26844710.2</span> A01581:167:HCG2TDMXY:1:1101:1606:1016 length=28</p>
+<p><span class="citation" data-cites="SRR26844710.1">@SRR26844710.1</span> A01581:167:HCG2TDMXY:1:1101:1262:1016 length=90<br>
+NTTTGAACACTCTAATTTTTTCAAAGTAAACGCTTCGGGCCCCGCGGGACACTCAGCTAAGAGCATCGAGGGGGCGCCGAGAGGCAAGGG<br>
++SRR26844710.1 A01581:167:HCG2TDMXY:1:1101:1262:1016 length=90<br>
+#FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FF:FFFFFFFFFFFFFFFFFFFFFFFFFFFF<br>
+<span class="citation" data-cites="SRR26844710.2">@SRR26844710.2</span> A01581:167:HCG2TDMXY:1:1101:1606:1016 length=90</p>
+<div id="cell-28" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="do">## modify format fastq for GEX/VDJ</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> file <span class="cf">in</span> <span class="sc">*</span>_2.fastq.gz; do</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  newname<span class="ot">=</span><span class="er">$</span>(echo <span class="st">"$file"</span> <span class="sc">|</span> sed <span class="st">'s/_2.fastq.gz/_S1_R1_001.fastq.gz/'</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  mv <span class="st">"$file"</span> <span class="st">"$newname"</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>done</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> file <span class="cf">in</span> <span class="sc">*</span>_3.fastq.gz; do</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  newname<span class="ot">=</span><span class="er">$</span>(echo <span class="st">"$file"</span> <span class="sc">|</span> sed <span class="st">'s/_3.fastq.gz/_S1_R2_001.fastq.gz/'</span>)</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  mv <span class="st">"$file"</span> <span class="st">"$newname"</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>done</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> file <span class="cf">in</span> <span class="sc">*</span>_1.fastq.gz; do</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>  newname<span class="ot">=</span><span class="er">$</span>(echo <span class="st">"$file"</span> <span class="sc">|</span> sed <span class="st">'s/_1.fastq.gz/_S1_I1_001.fastq.gz/'</span>)</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>  mv <span class="st">"$file"</span> <span class="st">"$newname"</span></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>done</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-29" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="do">## execute script</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system</span>(<span class="st">"cd /camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/ </span><span class="sc">\n</span><span class="st"> source /camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/fastqformat.sh"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-30" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>fs<span class="sc">::</span><span class="fu">dir_tree</span>(<span class="at">path =</span> <span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq
+├── SRR26844707_S1_I1_001.fastq.gz
+├── SRR26844707_S1_R1_001.fastq.gz
+├── SRR26844707_S1_R2_001.fastq.gz
+├── SRR26844708_S1_I1_001.fastq.gz
+├── SRR26844708_S1_R1_001.fastq.gz
+├── SRR26844708_S1_R2_001.fastq.gz
+├── SRR26844709_S1_I1_001.fastq.gz
+├── SRR26844709_S1_R1_001.fastq.gz
+├── SRR26844709_S1_R2_001.fastq.gz
+├── SRR26844710_S1_I1_001.fastq.gz
+├── SRR26844710_S1_R1_001.fastq.gz
+├── SRR26844710_S1_R2_001.fastq.gz
+├── SRR26844711_S1_R1_001.fastq.gz
+├── SRR26844711_S1_R2_001.fastq.gz
+├── SRR26844884_S1_I1_001.fastq.gz
+├── SRR26844884_S1_R1_001.fastq.gz
+├── SRR26844884_S1_R2_001.fastq.gz
+├── SRR26844885_S1_I1_001.fastq.gz
+├── SRR26844885_S1_R1_001.fastq.gz
+├── SRR26844885_S1_R2_001.fastq.gz
+├── SRR26844886_S1_I1_001.fastq.gz
+├── SRR26844886_S1_R1_001.fastq.gz
+├── SRR26844886_S1_R2_001.fastq.gz
+├── SRR26844887_S1_I1_001.fastq.gz
+├── SRR26844887_S1_R1_001.fastq.gz
+├── SRR26844887_S1_R2_001.fastq.gz
+├── SRR26844888_S1_R1_001.fastq.gz
+└── SRR26844888_S1_R2_001.fastq.gz</code></pre>
+</div>
+</div>
+</section>
+<section id="step2---batch_id.txt" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="step2---batch_id.txt"><font color="grey">Step2 -</font> batch_id.txt</h3>
+<p>Specify sequencing sample names (CV10, CV12) in “batch_id.txt” file.</p>
+<div id="cell-32" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="42">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="do">## show batch_id.txt</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">write.table</span>(<span class="fu">c</span>(<span class="st">"CV10"</span>, <span class="st">"CV12"</span>), <span class="st">"/camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/batch_id.txt"</span>, <span class="at">col.names =</span> F, <span class="at">row.names =</span> F, <span class="at">quote =</span> F)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat_content</span>(<span class="st">"/camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/batch_id.txt"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>CV10
+CV12</code></pre>
+</div>
+</div>
+</section>
+<section id="step3---configure.csv" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="step3---configure.csv"><font color="grey">Step3 -</font> configure.csv</h3>
+<p>Set paths for human reference genomes for GEX and VDJ libraries for “config.csv” file. This “config.csv” template file was retrieved from <a href="">CellRanger config.csv</a> and has been modified to run our pipeline. The reference genome files are required for the cellranger-multi pipeline and can be pre-installed following the steps in the <a href="">build 10X reference</a> link.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Please do not change the number of lines in the script as this is critical for Step 5 to run properly.</p>
+</div>
+</div>
+<div id="cell-34" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat_content</span>(<span class="st">"/camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/config.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># This template shows the possible cellranger multi config CSV options for analyzing Single Cell Gene Expression with Feature Barcode Technology (Antibody Capture, CRISPR Guide Capture, Cell Multiplexing, Antigen Capture), Fixed RNA Profiling, or Single Cell Immune Profiling data. 
+# These options cannot be used all together - see section descriptions for detail.
+# Use 'cellranger multi-template --parameters' to see descriptions of all parameters.
+# Please see cellranger multi documentation for details and experimental design-specific examples at https://www.10xgenomics.com/support.
+
+[gene-expression]
+reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-gex-GRCh38-2020-A
+# probe-set,/path/to/probe/set, # Required, Fixed RNA Profiling only. 
+# filter-probes,&lt;true|false&gt;, # Optional, Fixed RNA Profiling only. 
+# r1-length,&lt;int&gt;
+# r2-length,&lt;int&gt;
+# chemistry,SC5P-R2
+# expect-cells,&lt;auto&gt;
+# force-cells,&lt;auto&gt;
+# no-secondary,&lt;true|false&gt;
+# no-bam,&lt;true|false&gt;
+# check-library-compatibility,&lt;true|false&gt;
+# target-panel,/path/to/target/panel, # Required, Targeted GEX only.
+# no-target-umi-filter,&lt;true|false&gt;, # Optional, Targeted GEX only.
+# include-introns,&lt;true|false&gt;
+# min-assignment-confidence,&lt;0.9&gt;, # Optional, Cell Multiplexing only.
+# cmo-set,/path/to/CMO/reference, # Optional, Cell Multiplexing only.
+# barcode-sample-assignment,/path/to/barcode-sample-assignment/csv, # Optional, Cell Multiplexing only.
+
+[feature] # For Feature Barcode libraries only
+
+# r1-length,&lt;int&gt;
+# r2-length,&lt;int&gt;
+
+[vdj] # For TCR and BCR libraries only
+reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-cellranger-vdj-GRCh38-alts-ensembl-7.1.0
+inner-enrichment-primers,/camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/tcrgd_primers.txt
+# inner-enrichment-primers,/path/to/primers
+# r1-length,&lt;int&gt;
+# r2-length,&lt;int&gt;
+
+[libraries]
+fastq_id,fastqs,lanes,feature_types
+
+
+# Antibody1,/path/to/fastqs,Antibody Capture
+# CRISPR1,path/to/CRISPR_fastqs,CRISPR Guide Capture
+# CMO1,/path/to/fastqs,Multiplexing Capture, # Cell Multiplexing only
+# VDJ_T1,path/to/vdj_T_fastqs,VDJ-T, # 5' Immune Profiling only
+# VDJ_T_GD1,path/to/vdj_T_GD_fastqs,VDJ-T-GD, # 5' Immune Profiling only for gamma-delta TCR
+# Antigen1,path/to/antigen_capture_fastqs,Antigen Capture #5' Antigen Capture only
+
+#[antigen-specificity] # for 5' BCR/TCR Antigen Capture only
+#control_id,mhc_allele
+#Antigen1,AG001
+#Antigen2,AG002
+
+#[samples] # for Cell Multiplexing libraries only
+#sample_id,cmo_ids
+#sample1,CMO301
+#sample2,CMO303
+
+#[samples] # for Fixed RNA Profiling multiplexed libraries only
+#sample_id,probe_barcode_ids,description
+#sample1,BC001,Control
+#sample2,BC003,Treated
+
+#reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-gex-mm10-2020-A
+#reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-cellranger-vdj-GRCm38-alts-ensembl-7.0.0
+#reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-gex-GRCh38-2020-A
+#reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-cellranger-vdj-GRCh38-alts-ensembl-7.1.0</code></pre>
+</div>
+</div>
+<p>We will leave the references in [feature barcode] and [libraries] as empty in the “config.csv”, as we will define these paths with “library.csv” and “feature_reference.csv” below.</p>
+</section>
+<section id="step4---feature_reference.csv" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="step4---feature_reference.csv"><font color="grey">Step4 -</font> feature_reference.csv</h3>
+<p>Next we will set the correct oligo tag/sequence for “feature_reference.csv” for cellranger-multi to process and quantify the oligo reads properly. Below is an example of feature_reference.csv.</p>
+<div id="cell-37" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="43">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="do">## show example feature_reference.csv</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat_content</span>(<span class="st">"/camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/feature_reference.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>id,name,read,pattern,sequence,feature_type
+C0810,CD138,R2,5PNNNNNNNNNN(BC),GCGTTTGTATGTACT,Antibody Capture
+C0917,FAS,R2,5PNNNNNNNNNN(BC),CACATCGTTTGTGTA,Antibody Capture
+C0093,CD19,R2,5PNNNNNNNNNN(BC),ATCAGCCATGTCAGT,Antibody Capture
+C0103,B220,R2,5PNNNNNNNNNN(BC),CCTACACCTCATAAT,Antibody Capture
+C0557,CD38,R2,5PNNNNNNNNNN(BC),CGTATCCGTCTCCTA,Antibody Capture
+C0200,CD86,R2,5PNNNNNNNNNN(BC),CTGGATTTGTGTATC,Antibody Capture
+C0988,FITC,R2,5PNNNNNNNNNN(BC),TTTGTGTTGTGGTAC,Antibody Capture
+C0987,APC,R2,5PNNNNNNNNNN(BC),TTAACCGTCTCCCTT,Antibody Capture
+C0301,Hash1,R2,5PNNNNNNNNNN(BC),ACCCACCAGTAAGAC,Antibody Capture
+C0302,Hash2,R2,5PNNNNNNNNNN(BC),GGTCGAGAGCATTCA,Antibody Capture</code></pre>
+</div>
+</div>
+<p>Since CITEseq &amp; cell hashing library was prepared for the sequencing samples, information of the antibody used and their oligo sequence was retrieved from the SRA accession of this study. We will make one feature_reference.csv file for each sequencing sample to avoid mixing up, as the same hashtag oligo was used for different donors in different sequencing runs.</p>
+<div id="cell-39" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="44">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>fs<span class="sc">::</span><span class="fu">dir_tree</span>(<span class="at">path =</span> <span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/input
+├── GSE247910_ADT_HTO_details_README.txt
+├── GSE247912_ADT_HTO_details_README.txt
+├── SRR_Acc_List.txt
+└── SraRunTable.txt</code></pre>
+</div>
+</div>
+<div id="cell-40" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="47">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="do">## read the downloaded feature reference files</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>cv10_features <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input/GSE247910_ADT_HTO_details_README.txt"</span>, <span class="at">sep =</span> <span class="st">"</span><span class="sc">\t</span><span class="st">"</span>)</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>cv12_features <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input/GSE247912_ADT_HTO_details_README.txt"</span>, <span class="at">sep =</span> <span class="st">"</span><span class="sc">\t</span><span class="st">"</span>)</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(cv12_features)[<span class="dv">4</span>] <span class="ot">&lt;-</span> <span class="st">"HTO"</span> </span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(cv10_features)</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(cv12_features)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true">
+<caption>A data.frame: 6 × 6</caption>
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th" scope="col">ADT</th>
+<th data-quarto-table-cell-role="th" scope="col">barcode.sequence</th>
+<th data-quarto-table-cell-role="th" scope="col">X</th>
+<th data-quarto-table-cell-role="th" scope="col">HTO</th>
+<th data-quarto-table-cell-role="th" scope="col">barcode.sequence.1</th>
+<th data-quarto-table-cell-role="th" scope="col">hashtagged.sample</th>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;lgl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">1</td>
+<td>TotalSeq?-C0145 anti-human CD103</td>
+<td>GACCTCATTGTGAAT</td>
+<td>NA</td>
+<td>anti-human Hashtag 1</td>
+<td>GTCAACTCTTTAGCG</td>
+<td>CV-001 d0 booster</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">2</td>
+<td>TotalSeq?-C0155 anti-human CD107a</td>
+<td>CAGCCCACTGCAATA</td>
+<td>NA</td>
+<td>anti-human Hashtag 2</td>
+<td>TGATGGCCTATTGGG</td>
+<td>CV-001 d7 booster</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">3</td>
+<td>TotalSeq?-C0061 anti-human CD117</td>
+<td>AGACTAATAGCTGAC</td>
+<td>NA</td>
+<td>anti-human Hashtag 3</td>
+<td>TTCCGCCTCTCTTTG</td>
+<td>CV-001 d28 booster</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">4</td>
+<td>TotalSeq?-C0161 anti-human CD11b</td>
+<td>GACAAGTGATCTGCA</td>
+<td>NA</td>
+<td>anti-human Hashtag 4</td>
+<td>AGTAAGTTCAGCGTA</td>
+<td>CV-011 d120 booster</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">5</td>
+<td>TotalSeq?-C0053 anti-human CD11c</td>
+<td>TACGCCTATAACTTG</td>
+<td>NA</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">6</td>
+<td>TotalSeq?-C0064 anti-human CD123</td>
+<td>CTTCACTCTGTCAGG</td>
+<td>NA</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="cell-output cell-output-display">
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true">
+<caption>A data.frame: 6 × 6</caption>
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th" scope="col">ADT</th>
+<th data-quarto-table-cell-role="th" scope="col">barcode.sequence</th>
+<th data-quarto-table-cell-role="th" scope="col">X</th>
+<th data-quarto-table-cell-role="th" scope="col">HTO</th>
+<th data-quarto-table-cell-role="th" scope="col">barcode.sequence.1</th>
+<th data-quarto-table-cell-role="th" scope="col">hashtagged.sample</th>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;lgl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">1</td>
+<td>TotalSeq?-C0145 anti-human CD103</td>
+<td>GACCTCATTGTGAAT</td>
+<td>NA</td>
+<td>TotalSeq?-C0251 anti-human Hashtag 1</td>
+<td>GTCAACTCTTTAGCG</td>
+<td>CV-053 d0 vax</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">2</td>
+<td>TotalSeq?-C0155 anti-human CD107a</td>
+<td>CAGCCCACTGCAATA</td>
+<td>NA</td>
+<td>TotalSeq?-C0253 anti-human Hashtag 3</td>
+<td>TTCCGCCTCTCTTTG</td>
+<td>CV-053 d7 vax</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">3</td>
+<td>TotalSeq?-C0061 anti-human CD117</td>
+<td>AGACTAATAGCTGAC</td>
+<td>NA</td>
+<td>TotalSeq?-C0254 anti-human Hashtag 4</td>
+<td>AGTAAGTTCAGCGTA</td>
+<td>CV-053 d21 vax</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">4</td>
+<td>TotalSeq?-C0161 anti-human CD11b</td>
+<td>GACAAGTGATCTGCA</td>
+<td>NA</td>
+<td>TotalSeq?-C0255 anti-human Hashtag 5</td>
+<td>AAGTATCGTTTCGCA</td>
+<td>CV-053 d28 vax</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">5</td>
+<td>TotalSeq?-C0053 anti-human CD11c</td>
+<td>TACGCCTATAACTTG</td>
+<td>NA</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">6</td>
+<td>TotalSeq?-C0064 anti-human CD123</td>
+<td>CTTCACTCTGTCAGG</td>
+<td>NA</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="cell-41" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="48">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="do">## modify each feature reference</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="fu">c</span>(<span class="st">"cv10_features"</span>, <span class="st">"cv12_features"</span>)){</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    features <span class="ot">&lt;-</span> <span class="fu">get</span>(x)</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">colnames</span>(features) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">colnames</span>(features) <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">"id"</span>, <span class="st">"sequence"</span>, <span class="st">"name"</span>),<span class="dv">2</span>)</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>    features <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(features[<span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>)], features[<span class="fu">c</span>(<span class="dv">4</span><span class="sc">:</span><span class="dv">6</span>)]) <span class="sc">%&gt;%</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>        <span class="fu">filter</span>(id <span class="sc">!=</span> <span class="st">""</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">arrange</span>(name)</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>    features <span class="ot">&lt;-</span> features <span class="sc">%&gt;%</span></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>        <span class="fu">mutate</span>(</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>            <span class="at">id =</span> <span class="fu">gsub</span>(<span class="st">" $"</span>, <span class="st">""</span>, id), <span class="co"># remove random " " at the end of id</span></span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>            <span class="at">name =</span> <span class="fu">gsub</span>(<span class="st">" "</span>, <span class="st">"_"</span>, name),</span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>            <span class="at">name =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(name), id, name)) <span class="sc">%&gt;%</span> <span class="co"># add citeseq id to name</span></span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>        <span class="fu">mutate</span>(</span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a>            <span class="at">name =</span> <span class="fu">gsub</span>(<span class="st">".* "</span>, <span class="st">""</span>, name), </span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a>            <span class="at">id =</span> <span class="fu">gsub</span>(<span class="st">".*anti-human Hashtag "</span>, <span class="st">"Hashtag"</span>, id),</span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>            <span class="at">id =</span> <span class="fu">gsub</span>(<span class="st">"TotalSeq</span><span class="sc">\\</span><span class="st">?</span><span class="sc">\\</span><span class="st">-C"</span>, <span class="st">"C"</span>, id),</span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>            <span class="at">id =</span> <span class="fu">gsub</span>(<span class="st">" .*"</span>, <span class="st">""</span>, id)) <span class="sc">%&gt;%</span></span>
+<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a>        <span class="fu">mutate</span>(</span>
+<span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a>            <span class="at">name =</span> <span class="fu">gsub</span>(<span class="st">"^isoIg"</span>, <span class="st">"Ig"</span>, name),</span>
+<span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a>            <span class="at">read =</span> <span class="st">"R2"</span>,</span>
+<span id="cb37-24"><a href="#cb37-24" aria-hidden="true" tabindex="-1"></a>            <span class="at">pattern =</span> <span class="st">"5PNNNNNNNNNN(BC)"</span>,</span>
+<span id="cb37-25"><a href="#cb37-25" aria-hidden="true" tabindex="-1"></a>            <span class="at">feature_type =</span> <span class="st">"Antibody Capture"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb37-26"><a href="#cb37-26" aria-hidden="true" tabindex="-1"></a>        <span class="fu">filter</span>(id <span class="sc">!=</span> <span class="st">""</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb37-27"><a href="#cb37-27" aria-hidden="true" tabindex="-1"></a>        <span class="fu">filter</span>(sequence <span class="sc">!=</span> <span class="st">""</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb37-28"><a href="#cb37-28" aria-hidden="true" tabindex="-1"></a>        <span class="fu">select</span>(id, name, read, pattern, sequence, feature_type) <span class="sc">%&gt;%</span></span>
+<span id="cb37-29"><a href="#cb37-29" aria-hidden="true" tabindex="-1"></a>        <span class="fu">arrange</span>(<span class="fu">desc</span>(id)) <span class="sc">%&gt;%</span></span>
+<span id="cb37-30"><a href="#cb37-30" aria-hidden="true" tabindex="-1"></a>        <span class="fu">distinct</span>(.)</span>
+<span id="cb37-31"><a href="#cb37-31" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb37-32"><a href="#cb37-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>(<span class="fu">any</span>(<span class="fu">is.na</span>(features)))</span>
+<span id="cb37-33"><a href="#cb37-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">assign</span>(x, features)}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE
+[1] FALSE</code></pre>
+</div>
+</div>
+<div id="cell-42" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="71">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(cv10_features)</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(cv12_features)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true">
+<caption>A data.frame: 6 × 6</caption>
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th" scope="col">id</th>
+<th data-quarto-table-cell-role="th" scope="col">name</th>
+<th data-quarto-table-cell-role="th" scope="col">read</th>
+<th data-quarto-table-cell-role="th" scope="col">pattern</th>
+<th data-quarto-table-cell-role="th" scope="col">sequence</th>
+<th data-quarto-table-cell-role="th" scope="col">feature_type</th>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">1</td>
+<td>Hashtag4</td>
+<td>CV-011_d120_booster</td>
+<td>R2</td>
+<td>5PNNNNNNNNNN(BC)</td>
+<td>AGTAAGTTCAGCGTA</td>
+<td>Antibody Capture</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">2</td>
+<td>Hashtag3</td>
+<td>CV-001_d28_booster</td>
+<td>R2</td>
+<td>5PNNNNNNNNNN(BC)</td>
+<td>TTCCGCCTCTCTTTG</td>
+<td>Antibody Capture</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">3</td>
+<td>Hashtag2</td>
+<td>CV-001_d7_booster</td>
+<td>R2</td>
+<td>5PNNNNNNNNNN(BC)</td>
+<td>TGATGGCCTATTGGG</td>
+<td>Antibody Capture</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">4</td>
+<td>Hashtag1</td>
+<td>CV-001_d0_booster</td>
+<td>R2</td>
+<td>5PNNNNNNNNNN(BC)</td>
+<td>GTCAACTCTTTAGCG</td>
+<td>Antibody Capture</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">5</td>
+<td>C0831</td>
+<td>CD138</td>
+<td>R2</td>
+<td>5PNNNNNNNNNN(BC)</td>
+<td>GTATAGACCAAAGCC</td>
+<td>Antibody Capture</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">6</td>
+<td>C0804</td>
+<td>CD186</td>
+<td>R2</td>
+<td>5PNNNNNNNNNN(BC)</td>
+<td>GACAGTCGATGCAAC</td>
+<td>Antibody Capture</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="cell-output cell-output-display">
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true">
+<caption>A data.frame: 6 × 6</caption>
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th" scope="col">id</th>
+<th data-quarto-table-cell-role="th" scope="col">name</th>
+<th data-quarto-table-cell-role="th" scope="col">read</th>
+<th data-quarto-table-cell-role="th" scope="col">pattern</th>
+<th data-quarto-table-cell-role="th" scope="col">sequence</th>
+<th data-quarto-table-cell-role="th" scope="col">feature_type</th>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">1</td>
+<td>Hashtag5</td>
+<td>CV-053_d28_vax</td>
+<td>R2</td>
+<td>5PNNNNNNNNNN(BC)</td>
+<td>AAGTATCGTTTCGCA</td>
+<td>Antibody Capture</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">2</td>
+<td>Hashtag4</td>
+<td>CV-053_d21_vax</td>
+<td>R2</td>
+<td>5PNNNNNNNNNN(BC)</td>
+<td>AGTAAGTTCAGCGTA</td>
+<td>Antibody Capture</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">3</td>
+<td>Hashtag3</td>
+<td>CV-053_d7_vax</td>
+<td>R2</td>
+<td>5PNNNNNNNNNN(BC)</td>
+<td>TTCCGCCTCTCTTTG</td>
+<td>Antibody Capture</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">4</td>
+<td>Hashtag1</td>
+<td>CV-053_d0_vax</td>
+<td>R2</td>
+<td>5PNNNNNNNNNN(BC)</td>
+<td>GTCAACTCTTTAGCG</td>
+<td>Antibody Capture</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">5</td>
+<td>C0831</td>
+<td>CD138</td>
+<td>R2</td>
+<td>5PNNNNNNNNNN(BC)</td>
+<td>GTATAGACCAAAGCC</td>
+<td>Antibody Capture</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">6</td>
+<td>C0804</td>
+<td>CD186</td>
+<td>R2</td>
+<td>5PNNNNNNNNNN(BC)</td>
+<td>GACAGTCGATGCAAC</td>
+<td>Antibody Capture</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="cell-43" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="49">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="do">## now output the dataframes as feature_reference.csv</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="fu">c</span>(<span class="st">"cv10_features"</span>, <span class="st">"cv12_features"</span>)){</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    sample <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"_.*"</span>, <span class="st">""</span>, x)</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">write.csv</span>(<span class="fu">get</span>(x), <span class="fu">paste0</span>(<span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input/"</span>, <span class="fu">toupper</span>(sample), <span class="st">"_feature_reference.csv"</span>), <span class="at">row.names =</span> F, <span class="at">quote =</span> F)}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-44" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="50">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>fs<span class="sc">::</span><span class="fu">dir_tree</span>(<span class="at">path =</span> <span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/input
+├── CV10_feature_reference.csv
+├── CV12_feature_reference.csv
+├── GSE247910_ADT_HTO_details_README.txt
+├── GSE247912_ADT_HTO_details_README.txt
+├── SRR_Acc_List.txt
+└── SraRunTable.txt</code></pre>
+</div>
+</div>
+</section>
+<section id="step5---library.csv" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="step5---library.csv"><font color="grey">Step5 -</font> library.csv</h3>
+<p>Now we will create library.csv files to configure the “config.csv” file for each sequencing sample. Below are the specific columns required for “library.csv”</p>
+<blockquote class="blockquote">
+<p>[libraries]<br>
+fastq_id,fastqs,lanes,feature_types</p>
+</blockquote>
+<div id="cell-46" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># example of library.csv</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat_content</span>(<span class="st">'/camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/library.csv'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>SRR22473100,/camp/home/hungm/scratch/hungm/anqi/AX_GSE219098/raw_fastq/,any,Gene Expression
+SRR22473101,/camp/home/hungm/scratch/hungm/anqi/AX_GSE219098/raw_fastq/,any,Gene Expression
+SRR22473102,/camp/home/hungm/scratch/hungm/anqi/AX_GSE219098/raw_fastq/,any,Gene Expression
+SRR22473103,/camp/home/hungm/scratch/hungm/anqi/AX_GSE219098/raw_fastq/,any,Gene Expression
+SRR22473104,/camp/home/hungm/scratch/hungm/anqi/AX_GSE219098/raw_fastq/,any,Antibody Capture
+SRR22473105,/camp/home/hungm/scratch/hungm/anqi/AX_GSE219098/raw_fastq/,any,Antibody Capture
+SRR22473106,/camp/home/hungm/scratch/hungm/anqi/AX_GSE219098/raw_fastq/,any,Antibody Capture
+SRR22473107,/camp/home/hungm/scratch/hungm/anqi/AX_GSE219098/raw_fastq/,any,Antibody Capture
+SRR22473108,/camp/home/hungm/scratch/hungm/anqi/AX_GSE219098/raw_fastq/,any,VDJ-B
+SRR22473109,/camp/home/hungm/scratch/hungm/anqi/AX_GSE219098/raw_fastq/,any,VDJ-B
+SRR22473110,/camp/home/hungm/scratch/hungm/anqi/AX_GSE219098/raw_fastq/,any,VDJ-B
+SRR22473111,/camp/home/hungm/scratch/hungm/anqi/AX_GSE219098/raw_fastq/,any,VDJ-B</code></pre>
+</div>
+</div>
+<p>View SRA metadata again from <span class="quarto-unresolved-ref">?sec-sra</span> and modify dataframe to library.csv format.</p>
+<div id="cell-48" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># view SRA metadata again</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(sra)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true">
+<caption>A data.frame: 6 × 4</caption>
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th" scope="col">BioProject</th>
+<th data-quarto-table-cell-role="th" scope="col">Run</th>
+<th data-quarto-table-cell-role="th" scope="col">library_type</th>
+<th data-quarto-table-cell-role="th" scope="col">treatment</th>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">1</td>
+<td>PRJNA1040901</td>
+<td>SRR26844707</td>
+<td>TCRgd</td>
+<td>COVID-19</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">2</td>
+<td>PRJNA1040901</td>
+<td>SRR26844708</td>
+<td>TCRab</td>
+<td>COVID-19</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">3</td>
+<td>PRJNA1040901</td>
+<td>SRR26844709</td>
+<td>GEX</td>
+<td>COVID-19</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">4</td>
+<td>PRJNA1040901</td>
+<td>SRR26844710</td>
+<td>BCR</td>
+<td>COVID-19</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">5</td>
+<td>PRJNA1040901</td>
+<td>SRR26844711</td>
+<td>ADT</td>
+<td>COVID-19</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">6</td>
+<td>PRJNA1040899</td>
+<td>SRR26844884</td>
+<td>TCRgd</td>
+<td>SARS-CoV-2 vaccine</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="cell-49" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="do">## modify sra metadata</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>sra <span class="ot">&lt;-</span> sra <span class="sc">%&gt;%</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">feature_types =</span> <span class="fu">case_when</span>(</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>        library_type <span class="sc">==</span> <span class="st">"GEX"</span> <span class="sc">~</span> <span class="st">"Gene Expression"</span>, </span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>        library_type <span class="sc">==</span> <span class="st">"ADT"</span> <span class="sc">~</span> <span class="st">"Antibody Capture"</span>, </span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>        library_type <span class="sc">==</span> <span class="st">"BCR"</span> <span class="sc">~</span> <span class="st">"VDJ-B"</span>, </span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>        library_type <span class="sc">==</span> <span class="st">"TCRab"</span> <span class="sc">~</span> <span class="st">"VDJ-T"</span>, </span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>        library_type <span class="sc">==</span> <span class="st">"TCRgd"</span> <span class="sc">~</span> <span class="st">"VDJ-T-GD"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">id =</span> <span class="fu">ifelse</span>(BioProject <span class="sc">==</span> <span class="st">"PRJNA1040901"</span>, <span class="st">"CV10"</span>, <span class="st">"CV12"</span>),</span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">fastq_id =</span> Run,</span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a>        <span class="at">fastqs =</span> <span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/"</span>,</span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">lanes =</span> <span class="st">"any"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(id, fastq_id, fastqs, lanes, feature_types)</span>
+<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a>sra</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true">
+<caption>A data.frame: 10 × 5</caption>
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th" scope="col">id</th>
+<th data-quarto-table-cell-role="th" scope="col">fastq_id</th>
+<th data-quarto-table-cell-role="th" scope="col">fastqs</th>
+<th data-quarto-table-cell-role="th" scope="col">lanes</th>
+<th data-quarto-table-cell-role="th" scope="col">feature_types</th>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>CV10</td>
+<td>SRR26844707</td>
+<td>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/</td>
+<td>any</td>
+<td>VDJ-T-GD</td>
+</tr>
+<tr class="even">
+<td>CV10</td>
+<td>SRR26844708</td>
+<td>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/</td>
+<td>any</td>
+<td>VDJ-T</td>
+</tr>
+<tr class="odd">
+<td>CV10</td>
+<td>SRR26844709</td>
+<td>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/</td>
+<td>any</td>
+<td>Gene Expression</td>
+</tr>
+<tr class="even">
+<td>CV10</td>
+<td>SRR26844710</td>
+<td>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/</td>
+<td>any</td>
+<td>VDJ-B</td>
+</tr>
+<tr class="odd">
+<td>CV10</td>
+<td>SRR26844711</td>
+<td>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/</td>
+<td>any</td>
+<td>Antibody Capture</td>
+</tr>
+<tr class="even">
+<td>CV12</td>
+<td>SRR26844884</td>
+<td>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/</td>
+<td>any</td>
+<td>VDJ-T-GD</td>
+</tr>
+<tr class="odd">
+<td>CV12</td>
+<td>SRR26844885</td>
+<td>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/</td>
+<td>any</td>
+<td>VDJ-T</td>
+</tr>
+<tr class="even">
+<td>CV12</td>
+<td>SRR26844886</td>
+<td>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/</td>
+<td>any</td>
+<td>Gene Expression</td>
+</tr>
+<tr class="odd">
+<td>CV12</td>
+<td>SRR26844887</td>
+<td>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/</td>
+<td>any</td>
+<td>VDJ-B</td>
+</tr>
+<tr class="even">
+<td>CV12</td>
+<td>SRR26844888</td>
+<td>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/</td>
+<td>any</td>
+<td>Antibody Capture</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="cell-50" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="do">## save dataframe as library.csv</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>outputdir <span class="ot">&lt;-</span> <span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input/"</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="fu">unique</span>(sra<span class="sc">$</span>id)){</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    sra <span class="sc">%&gt;%</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">filter</span>(id <span class="sc">==</span> x) <span class="sc">%&gt;%</span></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">select</span>(<span class="sc">!</span>id) <span class="sc">%&gt;%</span></span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">write.table</span>(., <span class="fu">paste0</span>(outputdir, x, <span class="st">"_library.csv"</span>), <span class="at">col.names =</span> F, <span class="at">row.names =</span> F, <span class="at">quote =</span> F, <span class="at">sep =</span> <span class="st">","</span>)}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-51" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>fs<span class="sc">::</span><span class="fu">dir_tree</span>(<span class="at">path =</span> <span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input/"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/input/
+├── CV10_feature_reference.csv
+├── CV10_library.csv
+├── CV12_feature_reference.csv
+├── CV12_library.csv
+├── GSE247910_ADT_HTO_details_README.txt
+├── GSE247912_ADT_HTO_details_README.txt
+├── SRR_Acc_List.txt
+└── SraRunTable.txt</code></pre>
+</div>
+</div>
+</section>
+<section id="step6---batch.sh" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="step6---batch.sh"><font color="grey">Step6 -</font> batch.sh</h3>
+<p>Next we will need to create and modify each individual multi.sh and config.csv file for each sequencing sample, which can be done by running the “batch.sh” script. The script will perform the following :<br>
+&gt; 1. make a subdirectory for each sequencing sample in a pre-defined cellranger log directory. &gt; 2. copy “multi.sh” script into each sequencing sample subdirectory and modify cellranger output directory when multi.sh is ran &gt; 3. copy “config.csv” file into each sequencing sample subdirectory and add “library.csv” and “feature_reference.csv” contents to “config.csv”</p>
+<div id="cell-53" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat_content</span>(<span class="st">'/camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/batch.sh'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>export accession=/matthew/MH_GSE247917
+
+# setup all scripts in this cellranger log directory
+mkdir -p /camp/home/hungm/scratch/hungm/${accession}/logs/cellranger
+
+# for each sample name in batch_id.txt
+while IFS= read -r id;
+do mkdir -p /camp/home/hungm/scratch/hungm/${accession}/logs/cellranger/${id}
+
+   # copy essential files
+   cp -r /camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/multi.sh /camp/home/hungm/scratch/hungm/${accession}/logs/cellranger/${id}/
+   cp -r /camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/config.csv /camp/home/hungm/scratch/hungm/${accession}/logs/cellranger/${id}/
+   cp -r /camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/batch* /camp/home/hungm/scratch/hungm/${accession}/logs/cellranger/
+
+   # set up cellranger output directories
+   sed -i "11s|.*|export accession=$accession|" /camp/home/hungm/scratch/hungm/${accession}/logs/cellranger/${id}/multi.sh
+   sed -i "12s|.*|export sample=$id|" /camp/home/hungm/scratch/hungm/${accession}/logs/cellranger/${id}/multi.sh
+
+   # add library details from _library.csv to config.csv
+   csv1="/camp/home/hungm/scratch/hungm/${accession}/input/${id}_library.csv"
+   sed -i '38r '"$csv1"'' /camp/home/hungm/scratch/hungm/${accession}/logs/cellranger/${id}/config.csv
+
+   # specify feature barcoding path in config.csv
+   replacement="reference,/camp/home/hungm/scratch/hungm/$accession/input/${id}_feature_reference.csv"
+   sed -i "26s|.*|$replacement|" /camp/home/hungm/scratch/hungm/${accession}/logs/cellranger/${id}/config.csv;
+done &lt; /camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/batch_id.txt
+
+#########################
+### batch submit jobs ###
+#########################
+# sbatch */multi.sh
+
+#while IFS= read -r id;
+#do sbatch ${id}/multi.sh;
+#done &lt; /camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/batch_id.txt
+
+#while IFS= read -r id;
+#do rm -r /camp/home/hungm/scratch/hungm/${accession}/cellranger/${id};
+#done &lt; /camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/batch_id.txt</code></pre>
+</div>
+</div>
+<div id="cell-54" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="do">## execute batch.sh script</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system</span>(<span class="st">"source /camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/batch.sh"</span>)</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>fs<span class="sc">::</span><span class="fu">dir_tree</span>(<span class="at">path =</span> <span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/cellranger"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/cellranger
+├── CV10
+│   ├── config.csv
+│   └── multi.sh
+├── CV12
+│   ├── config.csv
+│   └── multi.sh
+├── batch.sh
+└── batch_id.txt</code></pre>
+</div>
+</div>
+<div id="cell-55" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat_content</span>(<span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/cellranger/CV12/config.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># This template shows the possible cellranger multi config CSV options for analyzing Single Cell Gene Expression with Feature Barcode Technology (Antibody Capture, CRISPR Guide Capture, Cell Multiplexing, Antigen Capture), Fixed RNA Profiling, or Single Cell Immune Profiling data. 
+# These options cannot be used all together - see section descriptions for detail.
+# Use 'cellranger multi-template --parameters' to see descriptions of all parameters.
+# Please see cellranger multi documentation for details and experimental design-specific examples at https://www.10xgenomics.com/support.
+
+[gene-expression]
+reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-gex-GRCh38-2020-A
+# probe-set,/path/to/probe/set, # Required, Fixed RNA Profiling only. 
+# filter-probes,&lt;true|false&gt;, # Optional, Fixed RNA Profiling only. 
+# r1-length,&lt;int&gt;
+# r2-length,&lt;int&gt;
+# chemistry,SC5P-R2
+# expect-cells,&lt;auto&gt;
+# force-cells,&lt;auto&gt;
+# no-secondary,&lt;true|false&gt;
+# no-bam,&lt;true|false&gt;
+# check-library-compatibility,&lt;true|false&gt;
+# target-panel,/path/to/target/panel, # Required, Targeted GEX only.
+# no-target-umi-filter,&lt;true|false&gt;, # Optional, Targeted GEX only.
+# include-introns,&lt;true|false&gt;
+# min-assignment-confidence,&lt;0.9&gt;, # Optional, Cell Multiplexing only.
+# cmo-set,/path/to/CMO/reference, # Optional, Cell Multiplexing only.
+# barcode-sample-assignment,/path/to/barcode-sample-assignment/csv, # Optional, Cell Multiplexing only.
+
+[feature] # For Feature Barcode libraries only
+reference,/camp/home/hungm/scratch/hungm//matthew/MH_GSE247917/input/CV12_feature_reference.csv
+# r1-length,&lt;int&gt;
+# r2-length,&lt;int&gt;
+
+[vdj] # For TCR and BCR libraries only
+reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-cellranger-vdj-GRCh38-alts-ensembl-7.1.0
+inner-enrichment-primers,/camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/tcrgd_primers.txt
+# inner-enrichment-primers,/path/to/primers
+# r1-length,&lt;int&gt;
+# r2-length,&lt;int&gt;
+
+[libraries]
+fastq_id,fastqs,lanes,feature_types
+SRR26844884,/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/,any,VDJ-T-GD
+SRR26844885,/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/,any,VDJ-T
+SRR26844886,/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/,any,Gene Expression
+SRR26844887,/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/,any,VDJ-B
+SRR26844888,/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/,any,Antibody Capture
+
+
+# Antibody1,/path/to/fastqs,Antibody Capture
+# CRISPR1,path/to/CRISPR_fastqs,CRISPR Guide Capture
+# CMO1,/path/to/fastqs,Multiplexing Capture, # Cell Multiplexing only
+# VDJ_T1,path/to/vdj_T_fastqs,VDJ-T, # 5' Immune Profiling only
+# VDJ_T_GD1,path/to/vdj_T_GD_fastqs,VDJ-T-GD, # 5' Immune Profiling only for gamma-delta TCR
+# Antigen1,path/to/antigen_capture_fastqs,Antigen Capture #5' Antigen Capture only
+
+#[antigen-specificity] # for 5' BCR/TCR Antigen Capture only
+#control_id,mhc_allele
+#Antigen1,AG001
+#Antigen2,AG002
+
+#[samples] # for Cell Multiplexing libraries only
+#sample_id,cmo_ids
+#sample1,CMO301
+#sample2,CMO303
+
+#[samples] # for Fixed RNA Profiling multiplexed libraries only
+#sample_id,probe_barcode_ids,description
+#sample1,BC001,Control
+#sample2,BC003,Treated
+
+#reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-gex-mm10-2020-A
+#reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-cellranger-vdj-GRCm38-alts-ensembl-7.0.0
+#reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-gex-GRCh38-2020-A
+#reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-cellranger-vdj-GRCh38-alts-ensembl-7.1.0</code></pre>
+</div>
+</div>
+</section>
+<section id="step7---multi.sh" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="step7---multi.sh"><font color="grey">Step7 -</font> multi.sh</h3>
+<p>After confirming that all the files are properly set up, we can run the multi.sh scripts for each sequencing sample.</p>
+<div id="cell-57" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="26">
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat_content</span>(<span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/cellranger/CV12/multi.sh"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#!/bin/bash
+#SBATCH --job-name=cellranger-multi
+#SBATCH --ntasks=32
+#SBATCH --cpus-per-task=1
+#SBATCH --time=7-00:00:0
+#SBATCH --mem=250G
+#SBATCH --partition=ncpu
+#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-user=matthew.hung@crick.ac.uk
+
+export accession=/matthew/MH_GSE247917
+export sample=CV12
+mkdir -p /camp/home/hungm/scratch/hungm/${accession}/cellranger
+exec &gt; /camp/home/hungm/scratch/hungm/${accession}/logs/cellranger/${sample}/multi.log 2&gt;&amp;1
+rm -r /camp/home/hungm/scratch/hungm/${accession}/logs/cellranger/slurm*
+
+cd /camp/home/hungm/scratch/hungm/${accession}/cellranger
+module load CellRanger/7.1.0
+cellranger multi --id=${sample} \
+         --csv=/camp/home/hungm/scratch/hungm/${accession}/logs/cellranger/${sample}/config.csv \
+                 --localmem=200 \
+                 --localcores=30
+</code></pre>
+</div>
+</div>
+<div id="cell-58" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="28">
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">system</span>(<span class="st">"cd /camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/cellranger/; sbatch CV10/multi.sh"</span>)</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system</span>(<span class="st">"cd /camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/cellranger/; sbatch CV12/multi.sh"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-59" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="35">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat_content</span>(<span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/cellranger/CV12/multi.log"</span>, <span class="at">n=</span><span class="dv">20</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Martian Runtime - v4.0.10
+Serving UI at http://cn013:38301?auth=iqpNquUSp17wjSrHixYSvDF7N_9DdLUSl-8oqgz5S04
+
+Running preflight checks (please wait)...
+2024-09-02 20:15:48 [runtime] (ready)           ID.CV12.SC_MULTI_CS.PARSE_MULTI_CONFIG
+2024-09-02 20:15:48 [runtime] (run:local)       ID.CV12.SC_MULTI_CS.PARSE_MULTI_CONFIG.fork0.chnk0.main
+2024-09-02 20:16:05 [runtime] (chunks_complete) ID.CV12.SC_MULTI_CS.PARSE_MULTI_CONFIG
+2024-09-02 20:16:05 [runtime] (ready)           ID.CV12.SC_MULTI_CS.FULL_COUNT_INPUTS.WRITE_GENE_INDEX
+2024-09-02 20:16:05 [runtime] (run:local)       ID.CV12.SC_MULTI_CS.FULL_COUNT_INPUTS.WRITE_GENE_INDEX.fork0.chnk0.main
+2024-09-02 20:16:05 [runtime] (ready)           ID.CV12.SC_MULTI_CS.SC_MULTI_CORE.MULTI_CHEMISTRY_DETECTOR._GEM_WELL_CHEMISTRY_DETECTOR.DETECT_COUNT_CHEMISTRY
+2024-09-02 20:16:05 [runtime] (run:local)       ID.CV12.SC_MULTI_CS.SC_MULTI_CORE.MULTI_CHEMISTRY_DETECTOR._GEM_WELL_CHEMISTRY_DETECTOR.DETECT_COUNT_CHEMISTRY.fork0.chnk0.main
+2024-09-02 20:16:05 [runtime] (ready)           ID.CV12.SC_MULTI_CS.SC_MULTI_CORE.MULTI_WEBSUMMARY_BUILDER.BUILD_MULTI_GRAPH_VIEW
+2024-09-02 20:16:05 [runtime] (run:local)       ID.CV12.SC_MULTI_CS.SC_MULTI_CORE.MULTI_WEBSUMMARY_BUILDER.BUILD_MULTI_GRAPH_VIEW.fork0.chnk0.main
+2024-09-02 20:16:05 [runtime] (ready)           ID.CV12.SC_MULTI_CS.SC_MULTI_CORE.MULTI_CHEMISTRY_DETECTOR._GEM_WELL_CHEMISTRY_DETECTOR.VDJ_CHEMISTRY_DETECTOR.DETECT_CHEMISTRY.fork0_fork0
+2024-09-02 20:16:05 [runtime] (run:local)       ID.CV12.SC_MULTI_CS.SC_MULTI_CORE.MULTI_CHEMISTRY_DETECTOR._GEM_WELL_CHEMISTRY_DETECTOR.VDJ_CHEMISTRY_DETECTOR.DETECT_CHEMISTRY.fork0_fork0.chnk0.main
+2024-09-02 20:16:05 [runtime] (ready)           ID.CV12.SC_MULTI_CS.SC_MULTI_CORE.MULTI_CHEMISTRY_DETECTOR._GEM_WELL_CHEMISTRY_DETECTOR.VDJ_CHEMISTRY_DETECTOR.DETECT_CHEMISTRY.fork0_fork1
+2024-09-02 20:16:05 [runtime] (run:local)       ID.CV12.SC_MULTI_CS.SC_MULTI_CORE.MULTI_CHEMISTRY_DETECTOR._GEM_WELL_CHEMISTRY_DETECTOR.VDJ_CHEMISTRY_DETECTOR.DETECT_CHEMISTRY.fork0_fork1.chnk0.main
+2024-09-02 20:16:05 [runtime] (ready)           ID.CV12.SC_MULTI_CS.SC_MULTI_CORE.MULTI_CHEMISTRY_DETECTOR._GEM_WELL_CHEMISTRY_DETECTOR.VDJ_CHEMISTRY_DETECTOR.DETECT_CHEMISTRY.fork0_fork2
+2024-09-02 20:16:05 [runtime] (run:local)       ID.CV12.SC_MULTI_CS.SC_MULTI_CORE.MULTI_CHEMISTRY_DETECTOR._GEM_WELL_CHEMISTRY_DETECTOR.VDJ_CHEMISTRY_DETECTOR.DETECT_CHEMISTRY.fork0_fork2.chnk0.main
+2024-09-02 20:16:06 [runtime] (chunks_complete) ID.CV12.SC_MULTI_CS.SC_MULTI_CORE.MULTI_WEBSUMMARY_BUILDER.BUILD_MULTI_GRAPH_VIEW</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="session-info" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="session-info">Session Info</h2>
+<div id="cell-61" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="252">
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>R version 4.3.2 (2023-10-31)
+Platform: x86_64-conda-linux-gnu (64-bit)
+Running under: Rocky Linux 8.7 (Green Obsidian)
+
+Matrix products: default
+BLAS/LAPACK: /nemo/lab/caladod/working/Matthew/.conda/envs/seurat5/lib/libopenblasp-r0.3.23.so;  LAPACK version 3.11.0
+
+locale:
+ [1] LC_CTYPE=en_GB.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_GB.UTF-8        LC_COLLATE=en_GB.UTF-8    
+ [5] LC_MONETARY=en_GB.UTF-8    LC_MESSAGES=en_GB.UTF-8   
+ [7] LC_PAPER=en_GB.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_GB.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Europe/London
+tzcode source: system (glibc)
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] lubridate_1.9.3 forcats_1.0.0   stringr_1.5.0   dplyr_1.1.4    
+ [5] purrr_1.0.2     readr_2.1.4     tidyr_1.3.0     tibble_3.2.1   
+ [9] ggplot2_3.5.1   tidyverse_2.0.0 knitr_1.45     
+
+loaded via a namespace (and not attached):
+ [1] gtable_0.3.4      jsonlite_1.8.7    compiler_4.3.2    crayon_1.5.2     
+ [5] tidyselect_1.2.0  IRdisplay_1.1     scales_1.3.0      uuid_1.1-1       
+ [9] fastmap_1.1.1     IRkernel_1.3.2    R6_2.5.1          generics_0.1.3   
+[13] munsell_0.5.0     pillar_1.9.0      tzdb_0.4.0        rlang_1.1.3      
+[17] utf8_1.2.4        stringi_1.7.12    repr_1.1.6        xfun_0.41        
+[21] fs_1.6.3          timechange_0.2.0  cli_3.6.1         withr_2.5.2      
+[25] magrittr_2.0.3    digest_0.6.33     grid_4.3.2        base64enc_0.1-3  
+[29] hms_1.1.3         pbdZMQ_0.3-9      lifecycle_1.0.3   vctrs_0.6.4      
+[33] evaluate_0.23     glue_1.6.2        fansi_1.0.5       colorspace_2.1-0 
+[37] tools_4.3.2       pkgconfig_2.0.3   htmltools_0.5.6.1</code></pre>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../sections/1_processing/1.2_seurat.html" class="pagination-link" aria-label="<span class='chapter-number'>4</span>&nbsp; <span class='chapter-title'>Seurat Object</span>">
+        <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Seurat Object</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

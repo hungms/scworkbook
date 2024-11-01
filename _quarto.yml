@@ -1,0 +1,67 @@
+project:
+  type: book
+  output-dir: docs
+
+book:
+  title: "Single-Cell Workbook"
+  description: ""
+  author: "Matthew Hung"
+  date: last-modified
+  page-navigation: true
+  search: true
+  repo-actions: [edit]
+  sidebar:
+    style: docked
+    background: light
+    alignment: center
+    tools:
+      - icon: github
+        menu:
+          - text: "Report A Bug"
+            href: "https://github.com/mshung229/scworkbook/"
+          - text: "Follow Me"
+            href: "https://github.com/mshung229"
+    linestretch: 2
+    font_size: 10
+
+  chapters:
+    - index.qmd
+    - text: "---"
+    - part: "**Chapter 0 : Introduction**"
+      chapters: 
+      - sections/0_introduction/0.1_installation.ipynb
+      - sections/0_introduction/0.2_data.ipynb
+    - text: "---"
+    - part: "**Chapter 1 : Data Processing**"
+      chapters:
+      - sections/1_processing/1.1_cellranger.ipynb
+      - sections/1_processing/1.2_seurat.ipynb
+      - sections/1_processing/1.3_demux.ipynb
+      - sections/1_processing/1.4_doublets.ipynb
+      - sections/1_processing/1.5_decont.ipynb
+      - sections/1_processing/1.6_qc.ipynb
+    - text: "---"
+    - part: "**Chapter 2 : Cell Classification**\n"
+      chapters:
+      - sections/2_cellclassification/2.1_sctransform.ipynb
+      #- sections/2_cellclassification/2.2_20240827_annotation.ipynb
+      #- sections/2_cellclassification/2.3_20240827_tcells.ipynb
+      #- sections/2_cellclassification/2.4_20240827_bcells.ipynb
+    #- part: "**Processing VDJ**"
+    #  chapters:
+    #- part: "**Functional Analysis**"
+    #  chapters:
+    #- part: "**Gene Set Enrichment Analysis**"
+
+format:
+  html:
+    theme: 
+      - flatly
+    grid:
+      sidebar-width: 350px
+      body-width: 1000px
+      margin-width: 400px
+      gutter-width: 1.5rem
+    code-fold: false
+    code-tools: true
+    monobackgroundcolor: "#f3f3f3"

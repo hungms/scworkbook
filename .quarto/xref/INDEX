@@ -1,0 +1,32 @@
+{
+  "index.qmd": {
+    "index.html": "4e4ce1be"
+  },
+  "sections/0_introduction/0.1_installation.ipynb": {
+    "0.1_installation.html": "7c80e9d6"
+  },
+  "sections/0_introduction/0.2_data.ipynb": {
+    "0.2_data.html": "bb67e7e1"
+  },
+  "sections/1_processing/1.1_cellranger.ipynb": {
+    "1.1_cellranger.html": "40089c33"
+  },
+  "sections/1_processing/1.2_seurat.ipynb": {
+    "1.2_seurat.html": "44d5868f"
+  },
+  "sections/1_processing/1.3_demux.ipynb": {
+    "1.3_demux.html": "12c6d291"
+  },
+  "sections/1_processing/1.4_doublets.ipynb": {
+    "1.4_doublets.html": "66caf6ed"
+  },
+  "sections/1_processing/1.5_decont.ipynb": {
+    "1.5_decont.html": "e060aa35"
+  },
+  "sections/1_processing/1.6_qc.ipynb": {
+    "1.6_qc.html": "c00cdc91"
+  },
+  "sections/2_cellclassification/2.1_sctransform.ipynb": {
+    "2.1_sctransform.html": "e4a527ad"
+  }
+}

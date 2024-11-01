@@ -1,0 +1,9 @@
+# <b>Preface</b> {.unnumbered}
+
+## *Motivation*
+As bioinformatic pipelines continue to evolve and expand, this single-cell workbook serves as a comprehensive documentation of the standard analytical processes used in the Calado lab's publications. It is designed to be a valuable reference for both internal lab members and external researchers, capturing the typical methodologies in our lab.
+
+Besides serving as a reference, this documentation also plays a crucial role in testing, recording, and evaluating new methodologies and the quality of their outputs. This dual purpose ensures the understanding of the strengths, pitfalls, and limitations of each analytical prediction, which together helps to generate a better gold-standard single-cell pipeline.
+
+## *Development*
+In addition to the documentation, I developed an R package [[scUnify]](https://github.com/mshung229/scUnify) which consists a range of wrapper and plot functions for internal use to customize and simplify data processing and visualization pipelines provided by existing tools. These functions are designed to be in continue use for current and future lab publications, and example usages of each function is documented throughout the chapters of this workbook. Further details of the installation & dependencies of these functons can be found in [Chapter 0 : Introduction/Installations].
