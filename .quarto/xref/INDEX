@@ -28,5 +28,11 @@
   },
   "sections/2_cellclassification/2.1_sctransform.ipynb": {
     "2.1_sctransform.html": "e4a527ad"
+  },
+  "sections/1_processing/1.4_qualitycontrol.ipynb": {
+    "1.4_qualitycontrol.html": "fa959145"
+  },
+  "sections/1_processing/1.6_doublets.ipynb": {
+    "1.6_doublets.html": "54771b75"
   }
 }

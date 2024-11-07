@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Matthew Hung">
-<meta name="dcterms.date" content="2024-08-27">
+<meta name="dcterms.date" content="2024-11-06">
 
 <title>Single-Cell Workbook - 5&nbsp; Cell Demultiplexing</title>
 <style>
@@ -66,7 +66,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../../">
-<link href="../../sections/1_processing/1.4_doublets.html" rel="next">
+<link href="../../sections/1_processing/1.4_qualitycontrol.html" rel="next">
 <link href="../../sections/1_processing/1.2_seurat.html" rel="prev">
 <script src="../../site_libs/quarto-html/quarto.js"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
@@ -222,8 +222,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../sections/1_processing/1.4_doublets.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Doublet Detection</span></span></a>
+  <a href="../../sections/1_processing/1.4_qualitycontrol.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Quality Control</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -234,8 +234,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../sections/1_processing/1.6_qc.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Quality Control</span></span></a>
+  <a href="../../sections/1_processing/1.6_doublets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Doublet Detection</span></span></a>
   </div>
 </li>
       </ul>
@@ -273,8 +273,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#inpect-hto-counts" id="toc-inpect-hto-counts" class="nav-link" data-scroll-target="#inpect-hto-counts"><span class="header-section-number">5.2</span> Inpect HTO Counts</a></li>
   <li><a href="#sec-htodemux" id="toc-sec-htodemux" class="nav-link" data-scroll-target="#sec-htodemux"><span class="header-section-number">5.3</span> HTODemux</a></li>
   <li><a href="#sec-multiseqdemux" id="toc-sec-multiseqdemux" class="nav-link" data-scroll-target="#sec-multiseqdemux"><span class="header-section-number">5.4</span> MULTIseqDemux</a></li>
-  <li><a href="#sec-evaluateoutput" id="toc-sec-evaluateoutput" class="nav-link" data-scroll-target="#sec-evaluateoutput"><span class="header-section-number">5.5</span> Evaluate Output</a></li>
-  <li><a href="#sec-htosignal" id="toc-sec-htosignal" class="nav-link" data-scroll-target="#sec-htosignal"><span class="header-section-number">5.6</span> Separation of HTO Signal</a></li>
+  <li><a href="#sec-htosignal" id="toc-sec-htosignal" class="nav-link" data-scroll-target="#sec-htosignal"><span class="header-section-number">5.5</span> Separation of HTO Signal</a></li>
   <li><a href="#session-info" id="toc-session-info" class="nav-link" data-scroll-target="#session-info">Session Info</a></li>
   </ul>
 </nav>
@@ -301,7 +300,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">2024-08-27</p>
+      <p class="date">2024-11-06</p>
     </div>
   </div>
   
@@ -316,30 +315,39 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="motivation" class="level2 unnumbered">
 <h2 class="unnumbered anchored" data-anchor-id="motivation">Motivation</h2>
 <p>For this dataset, each sample is comprised of cells from multiple patients hashtagged with a unique oligo sequence. To demultiplex which patient the cells were retrieved from, a demultiplexing algorithm must be used to quantify the oligo sequences for each cell and assign each cell to a patient. The most common approaches to date is using the HTOdemux <a href="https://genomebiology.biomedcentral.com/articles/10.1186/s13059-018-1603-1">[Stoeckius et al.; 2018]</a> or the MULTIseqDemux <a href="https://www.nature.com/articles/s41592-019-0433-8">[McGinnis et al.; 2019]</a> algorithms. Besides assigning each cell back to each patient, these algorithms are able to identify homolytic/heterolytic “Doublet” and “Negative” cells based on high/multiple and low oligo counts respectively. These poor quality droplets are a common issue with droplet-based sequencing when there are multiple or no cells found in each droplet, and removal of these droplets could prevent false-positive findings.</p>
-<div id="cell-2" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="24">
+<div id="cell-2" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="do">## set up environment</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressMessages</span>({</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"/camp/home/hungm/working/Matthew/library/R/functions/Seurat/processing.R"</span>)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"/camp/home/hungm/working/Matthew/library/R/functions/Seurat/plotting.R"</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">setwd</span>(<span class="st">"/nemo/lab/caladod/working/Matthew/project/matthew/MH_GSE155224"</span>)})</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="do">## load seurat objects</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>obj_list <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">"seurat/20240825_GSE155224_raw.qs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scUnify)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">setwd</span>(<span class="st">"/nemo/lab/caladod/working/Matthew/project/matthew/MH_GSE247917"</span>)})</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="do">## load seurat objects</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>obj.list <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">"seurat/1_processing/1.2_GSE247917_raw.qs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning message:
+“replacing previous import ‘cowplot::get_legend’ by ‘ggpubr::get_legend’ when loading ‘scUnify’”
+Warning message:
+“replacing previous import ‘cowplot::align_plots’ by ‘patchwork::align_plots’ when loading ‘scUnify’”
+Warning message:
+“replacing previous import ‘biomaRt::select’ by ‘rstatix::select’ when loading ‘scUnify’”
+Warning message:
+“replacing previous import ‘scales::viridis_pal’ by ‘viridis::viridis_pal’ when loading ‘scUnify’”</code></pre>
 </div>
-<div id="cell-3" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="273">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>obj_list</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-3" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>obj.list</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<pre><code>$filtered_matrix_1
+<pre><code>$CV10
 An object of class Seurat 
-17028 features across 7502 samples within 3 assays 
-Active assay: RNA (16828 features, 0 variable features)
+23862 features across 19484 samples within 3 assays 
+Active assay: RNA (23797 features, 0 variable features)
  1 layer present: counts
  2 other assays present: HTO, ADT
 
-$filtered_matrix_2
+$CV12
 An object of class Seurat 
-17301 features across 8227 samples within 3 assays 
-Active assay: RNA (17101 features, 0 variable features)
+16451 features across 17366 samples within 3 assays 
+Active assay: RNA (16386 features, 0 variable features)
  1 layer present: counts
  2 other assays present: HTO, ADT</code></pre>
 </div>
@@ -349,10 +357,10 @@ Active assay: RNA (17101 features, 0 variable features)
 <h2 data-number="5.1" class="anchored" data-anchor-id="sec-calculate_gene_fractions"><span class="header-section-number">5.1</span> Calculate Gene Fractions</h2>
 <p>Before demultiplexing, we need to first calculate the fraction of mitochondrial, ribosomal, haemoglobin, T/B-cell recepter (TCR/BCR) and MHC reads to identify poor quality cells, which can be informative of accurate demultiplexing. The function below will perform the calculations of key parameters that identifies poor quality cells.</p>
 <p>Please navigate to the next chapter &lt;Quality Control&gt; for a detailed explanation of the wrapper function, outputs, and interpretations.</p>
-<div id="cell-5" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="274">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="do">## calculate gene fractions (mt, rb, hb, tcr, bcr)</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(obj_list)){</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    obj_list[[x]] <span class="ot">&lt;-</span> <span class="fu">calculate_fractions</span>(obj_list[[x]])}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-5" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="do">## calculate gene fractions (mt, rb, hb, tcr, bcr, mhc)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(obj.list)){</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    obj.list[[x]] <span class="ot">&lt;-</span> <span class="fu">calculate_fractions</span>(obj.list[[x]])}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="inpect-hto-counts" class="level2" data-number="5.2">
@@ -361,212 +369,107 @@ Active assay: RNA (17101 features, 0 variable features)
 <blockquote class="blockquote">
 <p>Quantification show that Hashtag-1 and Hashtag-2 are pretty much not expressed. Indeed for these sequencing runs, the author did not tag cells with Hashtag-1 and Hashtag-2. However author did not remove these Tags during cellranger-multi processing, hence some false-positive counts.</p>
 </blockquote>
-<div id="cell-7" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="275">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Calculate how many cells expresses each tag</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>metalist <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(obj_list)){</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    metalist[[x]] <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">apply</span>(obj_list[[x]][[<span class="st">"HTO"</span>]]<span class="sc">$</span>counts, <span class="dv">1</span>, <span class="cf">function</span>(row) <span class="fu">sum</span>(row <span class="sc">!=</span> <span class="dv">0</span>)))</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">colnames</span>(metalist[[x]]) <span class="ot">&lt;-</span> <span class="fu">names</span>(obj_list)[x]}</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>metalist <span class="ot">&lt;-</span> <span class="fu">bind_cols</span>(metalist)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>metalist</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true">
-<caption>A data.frame: 8 × 2</caption>
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th" scope="col">filtered_matrix_1</th>
-<th data-quarto-table-cell-role="th" scope="col">filtered_matrix_2</th>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th" scope="col">&lt;int&gt;</th>
-<th data-quarto-table-cell-role="th" scope="col">&lt;int&gt;</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th" scope="row">anti-human-Hashtag-1-totalC</td>
-<td>59</td>
-<td>86</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th" scope="row">anti-human-Hashtag-2-totalC</td>
-<td>39</td>
-<td>60</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th" scope="row">anti-human-Hashtag-3-totalC</td>
-<td>7234</td>
-<td>8044</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th" scope="row">anti-human-Hashtag-4-totalC</td>
-<td>7494</td>
-<td>8221</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th" scope="row">anti-human-Hashtag-5-totalC</td>
-<td>7485</td>
-<td>8212</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th" scope="row">anti-human-Hashtag-6-totalC</td>
-<td>7501</td>
-<td>8226</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th" scope="row">anti-human-Hashtag-7-totalC</td>
-<td>7501</td>
-<td>8224</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th" scope="row">anti-human-Hashtag-8-totalC</td>
-<td>7500</td>
-<td>8225</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<div id="cell-8" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="276">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Calculate number of counts for each tag</span></span>
+<div id="cell-7" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Calculate how many cells expresses each tag</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>metalist <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(obj_list)){</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    metalist[[x]] <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">rowSums</span>(obj_list[[x]][[<span class="st">"HTO"</span>]]<span class="sc">$</span>counts))</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">colnames</span>(metalist[[x]]) <span class="ot">&lt;-</span> <span class="fu">names</span>(obj_list)[x]}</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>metalist <span class="ot">&lt;-</span> <span class="fu">bind_cols</span>(metalist)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>metalist</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(obj.list)){</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    metalist[[x]] <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">sample =</span> <span class="fu">names</span>(obj.list)[x], <span class="at">count =</span> <span class="fu">apply</span>(obj.list[[x]][[<span class="st">"HTO"</span>]]<span class="sc">$</span>counts, <span class="dv">1</span>, <span class="cf">function</span>(row) <span class="fu">sum</span>(row <span class="sc">!=</span> <span class="dv">0</span>)))}</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>metalist <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(metalist)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>metalist</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true">
 <caption>A data.frame: 8 × 2</caption>
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th" scope="col">filtered_matrix_1</th>
-<th data-quarto-table-cell-role="th" scope="col">filtered_matrix_2</th>
+<th data-quarto-table-cell-role="th" scope="col">sample</th>
+<th data-quarto-table-cell-role="th" scope="col">count</th>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th" scope="col">&lt;dbl&gt;</th>
-<th data-quarto-table-cell-role="th" scope="col">&lt;dbl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;int&gt;</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td data-quarto-table-cell-role="th" scope="row">anti-human-Hashtag-1-totalC</td>
-<td>60</td>
-<td>86</td>
+<td data-quarto-table-cell-role="th" scope="row">CV-011-d120-booster</td>
+<td>CV10</td>
+<td>16404</td>
 </tr>
 <tr class="even">
-<td data-quarto-table-cell-role="th" scope="row">anti-human-Hashtag-2-totalC</td>
-<td>40</td>
-<td>60</td>
+<td data-quarto-table-cell-role="th" scope="row">CV-001-d28-booster</td>
+<td>CV10</td>
+<td>16189</td>
 </tr>
 <tr class="odd">
-<td data-quarto-table-cell-role="th" scope="row">anti-human-Hashtag-3-totalC</td>
-<td>93205</td>
-<td>118714</td>
+<td data-quarto-table-cell-role="th" scope="row">CV-001-d7-booster</td>
+<td>CV10</td>
+<td>19476</td>
 </tr>
 <tr class="even">
-<td data-quarto-table-cell-role="th" scope="row">anti-human-Hashtag-4-totalC</td>
-<td>173037</td>
-<td>210110</td>
+<td data-quarto-table-cell-role="th" scope="row">CV-001-d0-booster</td>
+<td>CV10</td>
+<td>17218</td>
 </tr>
 <tr class="odd">
-<td data-quarto-table-cell-role="th" scope="row">anti-human-Hashtag-5-totalC</td>
-<td>93560</td>
-<td>120365</td>
+<td data-quarto-table-cell-role="th" scope="row">CV-053-d28-vax</td>
+<td>CV12</td>
+<td>9232</td>
 </tr>
 <tr class="even">
-<td data-quarto-table-cell-role="th" scope="row">anti-human-Hashtag-6-totalC</td>
-<td>2220085</td>
-<td>2496495</td>
+<td data-quarto-table-cell-role="th" scope="row">CV-053-d21-vax</td>
+<td>CV12</td>
+<td>12223</td>
 </tr>
 <tr class="odd">
-<td data-quarto-table-cell-role="th" scope="row">anti-human-Hashtag-7-totalC</td>
-<td>1170763</td>
-<td>1525116</td>
+<td data-quarto-table-cell-role="th" scope="row">CV-053-d7-vax</td>
+<td>CV12</td>
+<td>10337</td>
 </tr>
 <tr class="even">
-<td data-quarto-table-cell-role="th" scope="row">anti-human-Hashtag-8-totalC</td>
-<td>775182</td>
-<td>786222</td>
+<td data-quarto-table-cell-role="th" scope="row">CV-053-d0-vax</td>
+<td>CV12</td>
+<td>11173</td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
-<p>We will now remove those redundant tags from the “HTO” assay.</p>
-<div id="cell-10" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="277">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(obj_list)){</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    features <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"anti-human-Hashtag-1-totalC"</span>, <span class="st">"anti-human-Hashtag-2-totalC"</span>)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    obj_list[[x]] <span class="ot">&lt;-</span> <span class="fu">remove_genes</span>(obj_list[[x]], <span class="at">features =</span> features, <span class="at">orig.assay =</span> <span class="st">"HTO"</span>, <span class="at">new.assay =</span> <span class="st">"remove"</span>)</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    obj_list[[x]][[<span class="st">"remove"</span>]] <span class="ot">&lt;-</span> <span class="cn">NULL</span>}</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>obj_list</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning message:
-“Different cells and/or features from existing assay HTO”
-Warning message:
-“Different cells and/or features from existing assay HTO”</code></pre>
-</div>
-<div class="cell-output cell-output-display">
-<pre><code>$filtered_matrix_1
-An object of class Seurat 
-17026 features across 7502 samples within 3 assays 
-Active assay: HTO (6 features, 0 variable features)
- 1 layer present: counts
- 2 other assays present: RNA, ADT
-
-$filtered_matrix_2
-An object of class Seurat 
-17299 features across 8227 samples within 3 assays 
-Active assay: HTO (6 features, 0 variable features)
- 1 layer present: counts
- 2 other assays present: RNA, ADT</code></pre>
 </div>
 </div>
 </section>
 <section id="sec-htodemux" class="level2" data-number="5.3">
 <h2 data-number="5.3" class="anchored" data-anchor-id="sec-htodemux"><span class="header-section-number">5.3</span> HTODemux</h2>
 <p>First we will run the the wrapper function below to demultiplex the cells with the HTODemux algorithm in default settings.</p>
-<div id="cell-12" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="278">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="do">## add one pseudocount to each oligo to run HTODemux without error</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(obj_list)){</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    obj_list[[x]] <span class="ot">&lt;-</span> <span class="fu">htodemux</span>(obj_list[[x]], <span class="at">add.one =</span> T)}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-9" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="do">## add one pseudocount to each oligo to run HTODemux without error</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(obj.list)){</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    obj.list[[x]] <span class="ot">&lt;-</span> <span class="fu">run_htodemux</span>(obj.list[[x]], <span class="at">add.one =</span> F)}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Normalizing layer: counts
 
 Normalizing across cells
 
-Cutoff for anti-human-Hashtag-3-totalC : 46 reads
+As of Seurat v5, we recommend using AggregateExpression to perform pseudo-bulk analysis.
+This message is displayed once per session.
+Cutoff for CV-011-d120-booster : 57 reads
 
-Cutoff for anti-human-Hashtag-4-totalC : 66 reads
+Cutoff for CV-001-d28-booster : 49 reads
 
-Cutoff for anti-human-Hashtag-5-totalC : 38 reads
+Cutoff for CV-001-d7-booster : 146 reads
 
-Cutoff for anti-human-Hashtag-6-totalC : 122 reads
-
-Cutoff for anti-human-Hashtag-7-totalC : 120 reads
-
-Cutoff for anti-human-Hashtag-8-totalC : 88 reads
+Cutoff for CV-001-d0-booster : 49 reads
 
 Normalizing layer: counts
 
 Normalizing across cells
 
-Cutoff for anti-human-Hashtag-3-totalC : 19 reads
+Cutoff for CV-053-d28-vax : 20 reads
 
-Cutoff for anti-human-Hashtag-4-totalC : 38 reads
+Cutoff for CV-053-d21-vax : 2 reads
 
-Cutoff for anti-human-Hashtag-5-totalC : 40 reads
+Cutoff for CV-053-d7-vax : 8 reads
 
-Cutoff for anti-human-Hashtag-6-totalC : 119 reads
-
-Cutoff for anti-human-Hashtag-7-totalC : 101 reads
-
-Cutoff for anti-human-Hashtag-8-totalC : 105 reads
+Cutoff for CV-053-d0-vax : 24 reads
 </code></pre>
 </div>
 </div>
@@ -574,24 +477,24 @@ Cutoff for anti-human-Hashtag-8-totalC : 105 reads
 <blockquote class="blockquote">
 <p>HTODemux is able to assign &gt; 65% of cells as “Singlets” for both samples.</p>
 </blockquote>
-<div id="cell-14" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="279">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Aggregate HTODemux output into a dataframe</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>metalist <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="fu">seq_along</span>(obj_list)){</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    metalist[[x]] <span class="ot">&lt;-</span> obj_list[[x]]<span class="sc">@</span>meta.data}</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>metalist <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(metalist)</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="do">## Quantify % of Singlet cells left from each sample</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>metalist_qc <span class="ot">&lt;-</span> metalist <span class="sc">%&gt;%</span></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples, HTO_classification.global) <span class="sc">%&gt;%</span></span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarize</span>(<span class="at">count =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span></span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples) <span class="sc">%&gt;%</span></span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">pct =</span> count<span class="sc">*</span><span class="dv">100</span><span class="sc">/</span><span class="fu">sum</span>(count)) <span class="sc">%&gt;%</span></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span>HTO_classification.global <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Doublet"</span>, <span class="st">"Negative"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples) <span class="sc">%&gt;%</span></span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarize</span>(<span class="at">pct =</span> <span class="fu">sum</span>(pct))</span>
-<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>metalist_qc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-11" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Aggregate HTODemux output into a dataframe</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>metalist <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="fu">seq_along</span>(obj.list)){</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    metalist[[x]] <span class="ot">&lt;-</span> obj.list[[x]]<span class="sc">@</span>meta.data}</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>metalist <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(metalist)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="do">## Quantify % of Singlet cells left from each sample</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>metalist_qc <span class="ot">&lt;-</span> metalist <span class="sc">%&gt;%</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples, HTO_classification.global) <span class="sc">%&gt;%</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarize</span>(<span class="at">count =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples) <span class="sc">%&gt;%</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">pct =</span> count<span class="sc">*</span><span class="dv">100</span><span class="sc">/</span><span class="fu">sum</span>(count)) <span class="sc">%&gt;%</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span>HTO_classification.global <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Doublet"</span>, <span class="st">"Negative"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples) <span class="sc">%&gt;%</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarize</span>(<span class="at">pct =</span> <span class="fu">sum</span>(pct))</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>metalist_qc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true">
 <caption>A tibble: 2 × 2</caption>
@@ -607,40 +510,40 @@ Cutoff for anti-human-Hashtag-8-totalC : 105 reads
 </thead>
 <tbody>
 <tr class="odd">
-<td>filtered_matrix_1</td>
-<td>66.27566</td>
+<td>CV10</td>
+<td>49.19421</td>
 </tr>
 <tr class="even">
-<td>filtered_matrix_2</td>
-<td>69.35700</td>
+<td>CV12</td>
+<td>26.30427</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
-<div id="cell-15" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="280">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Visualizde % of Singlet cells left from each sample</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">5</span>, <span class="at">repr.plot.height=</span><span class="dv">4</span>)</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>metalist <span class="sc">%&gt;%</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples, HTO_classification.global) <span class="sc">%&gt;%</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarize</span>(<span class="at">count =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples) <span class="sc">%&gt;%</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">pct =</span> count<span class="sc">*</span><span class="dv">100</span><span class="sc">/</span><span class="fu">sum</span>(count)) <span class="sc">%&gt;%</span></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> samples, <span class="at">y =</span> pct, <span class="at">fill =</span> HTO_classification.global)) <span class="sc">+</span></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_col</span>(<span class="at">color =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>HTO_classification.global) <span class="sc">+</span></span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">guides</span>(<span class="at">fill =</span> <span class="fu">guide_legend</span>(<span class="at">title =</span> <span class="st">""</span>)) <span class="sc">+</span></span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylim</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">100</span>)) <span class="sc">+</span></span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>, <span class="at">vjust =</span> <span class="fl">0.5</span>, <span class="at">hjust=</span><span class="dv">1</span>)) <span class="sc">+</span></span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">""</span>) <span class="sc">+</span></span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="st">"Proportions (%)"</span>) <span class="sc">+</span></span>
-<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_border</span>() <span class="sc">+</span></span>
-<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_aes</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-12" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Visualizde % of Singlet cells left from each sample</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">5</span>, <span class="at">repr.plot.height=</span><span class="dv">4</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>metalist <span class="sc">%&gt;%</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples, HTO_classification.global) <span class="sc">%&gt;%</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarize</span>(<span class="at">count =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples) <span class="sc">%&gt;%</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">pct =</span> count<span class="sc">*</span><span class="dv">100</span><span class="sc">/</span><span class="fu">sum</span>(count)) <span class="sc">%&gt;%</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> samples, <span class="at">y =</span> pct, <span class="at">fill =</span> HTO_classification.global)) <span class="sc">+</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_col</span>(<span class="at">color =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>HTO_classification.global) <span class="sc">+</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">guides</span>(<span class="at">fill =</span> <span class="fu">guide_legend</span>(<span class="at">title =</span> <span class="st">""</span>)) <span class="sc">+</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylim</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">100</span>)) <span class="sc">+</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>, <span class="at">vjust =</span> <span class="fl">0.5</span>, <span class="at">hjust=</span><span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">""</span>) <span class="sc">+</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="st">"Proportions (%)"</span>) <span class="sc">+</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_border</span>() <span class="sc">+</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_aes</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="1.3_demux_files/figure-html/cell-10-output-1.png" class="img-fluid figure-img"></p>
+<p><img src="1.3_demux_files/figure-html/cell-8-output-1.png" class="img-fluid figure-img"></p>
 </figure>
 </div>
 </div>
@@ -649,28 +552,33 @@ Cutoff for anti-human-Hashtag-8-totalC : 105 reads
 <blockquote class="blockquote">
 <p>Looking at nFeature_RNA &amp; nCounts_RNA mainly, HTODemux assignment do accurately reflect nature of the “Negative” and “Doublet” cells in our case.</p>
 </blockquote>
-<div id="cell-17" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="281">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="do">## inspect filtering parameters for the problematic samples</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">20</span>, <span class="at">repr.plot.height=</span> <span class="dv">6</span>)</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>cols <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"nFeature_RNA"</span>, <span class="st">"nCount_RNA"</span>, <span class="st">"nFeature_HTO"</span>, <span class="st">"nCount_HTO"</span>, <span class="st">"pct.mt"</span>, <span class="st">"pct.rb"</span>, <span class="st">"pct.tcr"</span>, <span class="st">"pct.bcr"</span>)</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>metalist <span class="sc">%&gt;%</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(HTO_classification.global)) <span class="sc">%&gt;%</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">all_of</span>(cols), <span class="at">names_to =</span> <span class="st">"measures"</span>, <span class="at">values_to =</span> <span class="st">"values"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">measures =</span> <span class="fu">factor</span>(measures, cols)) <span class="sc">%&gt;%</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> HTO_classification.global, <span class="at">y =</span> values, <span class="at">fill =</span> HTO_classification.global)) <span class="sc">+</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_violin</span>(<span class="at">size =</span> <span class="dv">1</span>, <span class="at">scale =</span> <span class="st">"width"</span>, <span class="at">bw =</span> <span class="st">"nrd0"</span>, <span class="at">position=</span><span class="fu">position_dodge</span>(<span class="fl">0.75</span>), <span class="at">trim =</span> T, <span class="at">drop =</span> F, <span class="at">adjust =</span> <span class="fl">1.5</span>) <span class="sc">+</span></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>samples <span class="sc">+</span> measures, <span class="at">scales =</span> <span class="st">"free"</span>, <span class="at">ncol =</span> <span class="dv">8</span>) <span class="sc">+</span></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>, <span class="at">vjust =</span> <span class="fl">0.5</span>, <span class="at">hjust=</span><span class="dv">1</span>)) <span class="sc">+</span></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">guides</span>(<span class="at">fill =</span> <span class="fu">guide_legend</span>(<span class="at">title =</span> <span class="st">""</span>)) <span class="sc">+</span></span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">""</span>) <span class="sc">+</span></span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="st">""</span>) <span class="sc">+</span></span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_border</span>() <span class="sc">+</span></span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_aes</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-14" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="do">## inspect filtering parameters for the problematic samples</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">20</span>, <span class="at">repr.plot.height=</span> <span class="dv">6</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>cols <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"nFeature_RNA"</span>, <span class="st">"nCount_RNA"</span>, <span class="st">"nFeature_HTO"</span>, <span class="st">"nCount_HTO"</span>, <span class="st">"pct.mt"</span>, <span class="st">"pct.rb"</span>, <span class="st">"pct.tcr"</span>, <span class="st">"pct.bcr"</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>metalist <span class="sc">%&gt;%</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(HTO_classification.global)) <span class="sc">%&gt;%</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">all_of</span>(cols), <span class="at">names_to =</span> <span class="st">"measures"</span>, <span class="at">values_to =</span> <span class="st">"values"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">measures =</span> <span class="fu">factor</span>(measures, cols)) <span class="sc">%&gt;%</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> HTO_classification.global, <span class="at">y =</span> values, <span class="at">fill =</span> HTO_classification.global)) <span class="sc">+</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_violin</span>(<span class="at">size =</span> <span class="dv">1</span>, <span class="at">scale =</span> <span class="st">"width"</span>, <span class="at">bw =</span> <span class="st">"nrd0"</span>, <span class="at">position=</span><span class="fu">position_dodge</span>(<span class="fl">0.75</span>), <span class="at">trim =</span> T, <span class="at">drop =</span> F, <span class="at">adjust =</span> <span class="fl">1.5</span>) <span class="sc">+</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>samples <span class="sc">+</span> measures, <span class="at">scales =</span> <span class="st">"free"</span>, <span class="at">ncol =</span> <span class="dv">8</span>) <span class="sc">+</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>, <span class="at">vjust =</span> <span class="fl">0.5</span>, <span class="at">hjust=</span><span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">guides</span>(<span class="at">fill =</span> <span class="fu">guide_legend</span>(<span class="at">title =</span> <span class="st">""</span>)) <span class="sc">+</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">""</span>) <span class="sc">+</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="st">""</span>) <span class="sc">+</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_border</span>() <span class="sc">+</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_aes</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning message:
+“Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.”</code></pre>
+</div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="1.3_demux_files/figure-html/cell-11-output-1.png" class="img-fluid figure-img"></p>
+<p><img src="1.3_demux_files/figure-html/cell-9-output-2.png" class="img-fluid figure-img"></p>
 </figure>
 </div>
 </div>
@@ -679,10 +587,10 @@ Cutoff for anti-human-Hashtag-8-totalC : 105 reads
 <section id="sec-multiseqdemux" class="level2" data-number="5.4">
 <h2 data-number="5.4" class="anchored" data-anchor-id="sec-multiseqdemux"><span class="header-section-number">5.4</span> MULTIseqDemux</h2>
 <p>Next we also will also implement MULTIseqDemux algorithm as a benchmark.</p>
-<div id="cell-19" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="282">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="do">## run MULTIseqDemux</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(obj_list)){</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    obj_list[[x]] <span class="ot">&lt;-</span> <span class="fu">multiseqdemux</span>(obj_list[[x]], <span class="at">add.one =</span> F)}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-16" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="do">## run MULTIseqDemux</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(obj.list)){</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    obj.list[[x]] <span class="ot">&lt;-</span> <span class="fu">run_multiseqdemux</span>(obj.list[[x]], <span class="at">add.one =</span> F)}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Normalizing layer: counts
 
@@ -695,24 +603,24 @@ Normalizing across cells
 </div>
 </div>
 <p>Below we will visualize the output from MULTIseqDemux to inspect the quality of demultiplexing. Again we quantified the percentage of “Singlet”, “Doublet” and “Negative” cells for each sample. &gt; Compared to HTODemux, all samples have &gt; 70% of cells assigned as “Singlet”.</p>
-<div id="cell-21" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="283">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Aggregate MULTIseqDemux output into a dataframe</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>metalist <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="fu">seq_along</span>(obj_list)){</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    metalist[[x]] <span class="ot">&lt;-</span> obj_list[[x]]<span class="sc">@</span>meta.data}</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>metalist <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(metalist)</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="do">## Quantify % of Singlet cells left from each sample</span></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>metalist_qc <span class="ot">&lt;-</span> metalist <span class="sc">%&gt;%</span></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples, MULTI.global) <span class="sc">%&gt;%</span></span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarize</span>(<span class="at">count =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span></span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples) <span class="sc">%&gt;%</span></span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">pct =</span> count<span class="sc">*</span><span class="dv">100</span><span class="sc">/</span><span class="fu">sum</span>(count)) <span class="sc">%&gt;%</span></span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span>MULTI.global <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Doublet"</span>, <span class="st">"Negative"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples) <span class="sc">%&gt;%</span></span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarize</span>(<span class="at">pct =</span> <span class="fu">sum</span>(pct))</span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>metalist_qc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-18" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Aggregate MULTIseqDemux output into a dataframe</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>metalist <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="fu">seq_along</span>(obj.list)){</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    metalist[[x]] <span class="ot">&lt;-</span> obj.list[[x]]<span class="sc">@</span>meta.data}</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>metalist <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(metalist)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="do">## Quantify % of Singlet cells left from each sample</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>metalist_qc <span class="ot">&lt;-</span> metalist <span class="sc">%&gt;%</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples, MULTI.global) <span class="sc">%&gt;%</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarize</span>(<span class="at">count =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples) <span class="sc">%&gt;%</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">pct =</span> count<span class="sc">*</span><span class="dv">100</span><span class="sc">/</span><span class="fu">sum</span>(count)) <span class="sc">%&gt;%</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span>MULTI.global <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Doublet"</span>, <span class="st">"Negative"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples) <span class="sc">%&gt;%</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarize</span>(<span class="at">pct =</span> <span class="fu">sum</span>(pct))</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>metalist_qc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true">
 <caption>A tibble: 2 × 2</caption>
@@ -728,40 +636,40 @@ Normalizing across cells
 </thead>
 <tbody>
 <tr class="odd">
-<td>filtered_matrix_1</td>
-<td>73.14050</td>
+<td>CV10</td>
+<td>84.33587</td>
 </tr>
 <tr class="even">
-<td>filtered_matrix_2</td>
-<td>75.37377</td>
+<td>CV12</td>
+<td>42.67534</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
-<div id="cell-22" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="284">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Visualize % of Singlet cells left from each sample</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">5</span>, <span class="at">repr.plot.height=</span><span class="dv">4</span>)</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>metalist <span class="sc">%&gt;%</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples, MULTI.global) <span class="sc">%&gt;%</span></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarize</span>(<span class="at">count =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples) <span class="sc">%&gt;%</span></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">pct =</span> count<span class="sc">*</span><span class="dv">100</span><span class="sc">/</span><span class="fu">sum</span>(count)) <span class="sc">%&gt;%</span></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> samples, <span class="at">y =</span> pct, <span class="at">fill =</span> MULTI.global)) <span class="sc">+</span></span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_col</span>() <span class="sc">+</span></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>MULTI.global) <span class="sc">+</span></span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">guides</span>(<span class="at">fill =</span> <span class="fu">guide_legend</span>(<span class="at">title =</span> <span class="st">""</span>)) <span class="sc">+</span></span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylim</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">100</span>)) <span class="sc">+</span></span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>, <span class="at">vjust =</span> <span class="fl">0.5</span>, <span class="at">hjust=</span><span class="dv">1</span>)) <span class="sc">+</span></span>
-<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">""</span>) <span class="sc">+</span></span>
-<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="st">"Proportions (%)"</span>) <span class="sc">+</span></span>
-<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_border</span>() <span class="sc">+</span></span>
-<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_aes</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-19" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Visualize % of Singlet cells left from each sample</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">5</span>, <span class="at">repr.plot.height=</span><span class="dv">4</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>metalist <span class="sc">%&gt;%</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples, MULTI.global) <span class="sc">%&gt;%</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarize</span>(<span class="at">count =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(samples) <span class="sc">%&gt;%</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">pct =</span> count<span class="sc">*</span><span class="dv">100</span><span class="sc">/</span><span class="fu">sum</span>(count)) <span class="sc">%&gt;%</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> samples, <span class="at">y =</span> pct, <span class="at">fill =</span> MULTI.global)) <span class="sc">+</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_col</span>() <span class="sc">+</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>MULTI.global) <span class="sc">+</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">guides</span>(<span class="at">fill =</span> <span class="fu">guide_legend</span>(<span class="at">title =</span> <span class="st">""</span>)) <span class="sc">+</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylim</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">100</span>)) <span class="sc">+</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>, <span class="at">vjust =</span> <span class="fl">0.5</span>, <span class="at">hjust=</span><span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">""</span>) <span class="sc">+</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="st">"Proportions (%)"</span>) <span class="sc">+</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_border</span>() <span class="sc">+</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_aes</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="1.3_demux_files/figure-html/cell-14-output-1.png" class="img-fluid figure-img"></p>
+<p><img src="1.3_demux_files/figure-html/cell-12-output-1.png" class="img-fluid figure-img"></p>
 </figure>
 </div>
 </div>
@@ -770,235 +678,114 @@ Normalizing across cells
 <blockquote class="blockquote">
 <p>Looking at nFeature and nCounts again, nCounts and nFeatures of “Negative” cells are substantially lower than “Singlet” cells, wheres “Doublets” are much higher than “Singlet” cells. Compared to HTODemux, MULTIseqDemux may better capture true “Singlet” cells.</p>
 </blockquote>
-<div id="cell-24" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="285">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="do">## inspect filtering parameters for the problematic samples</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">20</span>, <span class="at">repr.plot.height=</span> <span class="dv">6</span>)</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>cols <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"nFeature_RNA"</span>, <span class="st">"nCount_RNA"</span>, <span class="st">"nFeature_HTO"</span>, <span class="st">"nCount_HTO"</span>, <span class="st">"pct.mt"</span>, <span class="st">"pct.rb"</span>, <span class="st">"pct.tcr"</span>, <span class="st">"pct.bcr"</span>)</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>metalist <span class="sc">%&gt;%</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(MULTI.global)) <span class="sc">%&gt;%</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">all_of</span>(cols), <span class="at">names_to =</span> <span class="st">"measures"</span>, <span class="at">values_to =</span> <span class="st">"values"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">measures =</span> <span class="fu">factor</span>(measures, cols)) <span class="sc">%&gt;%</span></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> MULTI.global, <span class="at">y =</span> values, <span class="at">fill =</span> MULTI.global)) <span class="sc">+</span></span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_violin</span>(<span class="at">size =</span> <span class="dv">1</span>, <span class="at">scale =</span> <span class="st">"width"</span>, <span class="at">bw =</span> <span class="st">"nrd0"</span>, <span class="at">position=</span><span class="fu">position_dodge</span>(<span class="fl">0.75</span>), <span class="at">trim =</span> T, <span class="at">drop =</span> F, <span class="at">adjust =</span> <span class="fl">1.5</span>) <span class="sc">+</span></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>samples <span class="sc">+</span> measures, <span class="at">scales =</span> <span class="st">"free"</span>, <span class="at">ncol =</span> <span class="dv">8</span>) <span class="sc">+</span></span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>, <span class="at">vjust =</span> <span class="fl">0.5</span>, <span class="at">hjust=</span><span class="dv">1</span>)) <span class="sc">+</span></span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">guides</span>(<span class="at">fill =</span> <span class="fu">guide_legend</span>(<span class="at">title =</span> <span class="st">""</span>)) <span class="sc">+</span></span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">""</span>) <span class="sc">+</span></span>
-<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="st">""</span>) <span class="sc">+</span></span>
-<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_border</span>() <span class="sc">+</span></span>
-<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_aes</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-21" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="do">## inspect filtering parameters for the problematic samples</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">20</span>, <span class="at">repr.plot.height=</span> <span class="dv">6</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>cols <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"nFeature_RNA"</span>, <span class="st">"nCount_RNA"</span>, <span class="st">"nFeature_HTO"</span>, <span class="st">"nCount_HTO"</span>, <span class="st">"pct.mt"</span>, <span class="st">"pct.rb"</span>, <span class="st">"pct.tcr"</span>, <span class="st">"pct.bcr"</span>)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>metalist <span class="sc">%&gt;%</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(MULTI.global)) <span class="sc">%&gt;%</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">all_of</span>(cols), <span class="at">names_to =</span> <span class="st">"measures"</span>, <span class="at">values_to =</span> <span class="st">"values"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">measures =</span> <span class="fu">factor</span>(measures, cols)) <span class="sc">%&gt;%</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> MULTI.global, <span class="at">y =</span> values, <span class="at">fill =</span> MULTI.global)) <span class="sc">+</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_violin</span>(<span class="at">size =</span> <span class="dv">1</span>, <span class="at">scale =</span> <span class="st">"width"</span>, <span class="at">bw =</span> <span class="st">"nrd0"</span>, <span class="at">position=</span><span class="fu">position_dodge</span>(<span class="fl">0.75</span>), <span class="at">trim =</span> T, <span class="at">drop =</span> F, <span class="at">adjust =</span> <span class="fl">1.5</span>) <span class="sc">+</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>samples <span class="sc">+</span> measures, <span class="at">scales =</span> <span class="st">"free"</span>, <span class="at">ncol =</span> <span class="dv">8</span>) <span class="sc">+</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>, <span class="at">vjust =</span> <span class="fl">0.5</span>, <span class="at">hjust=</span><span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">guides</span>(<span class="at">fill =</span> <span class="fu">guide_legend</span>(<span class="at">title =</span> <span class="st">""</span>)) <span class="sc">+</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">""</span>) <span class="sc">+</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="st">""</span>) <span class="sc">+</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_border</span>() <span class="sc">+</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_aes</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="1.3_demux_files/figure-html/cell-15-output-1.png" class="img-fluid figure-img"></p>
+<p><img src="1.3_demux_files/figure-html/cell-13-output-1.png" class="img-fluid figure-img"></p>
 </figure>
 </div>
-</div>
-</div>
-</section>
-<section id="sec-evaluateoutput" class="level2" data-number="5.5">
-<h2 data-number="5.5" class="anchored" data-anchor-id="sec-evaluateoutput"><span class="header-section-number">5.5</span> Evaluate Output</h2>
-<p>When there are more than 5 HTO hashtags, we can perform a umap visualization to evaluate which method could best predict “Singlet” cells.</p>
-<div id="cell-26" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="286">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="do">## make sure there are more than 5 HTO tags</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(obj_list[[<span class="dv">1</span>]][[<span class="st">"HTO"</span>]])</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(obj_list[[<span class="dv">2</span>]][[<span class="st">"HTO"</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-6
-</div>
-<div class="cell-output cell-output-display">
-6
-</div>
-</div>
-<div id="cell-27" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="287">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="do">## process HTO counts</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>obj_list <span class="ot">&lt;-</span> <span class="fu">process_hto</span>(obj_list)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Found more than one class "dist" in cache; using the first, from namespace 'BiocGenerics'
-
-Also defined by ‘spam’
-
-Found more than one class "dist" in cache; using the first, from namespace 'BiocGenerics'
-
-Also defined by ‘spam’
-
-Found more than one class "dist" in cache; using the first, from namespace 'BiocGenerics'
-
-Also defined by ‘spam’
-
-Found more than one class "dist" in cache; using the first, from namespace 'BiocGenerics'
-
-Also defined by ‘spam’
-</code></pre>
 </div>
 </div>
 <blockquote class="blockquote">
 <p>UMAP below shows that MULTIseqDemux assigned a large cluster of cells as tags in both sequencing runs rather than “Doublet/Negative” to HTODemux. HTODemux has been suggested to predict more false-positive doublets compared to MULTIseqDemux (see <a href="https://github.com/chris-mcginnis-ucsf/MULTI-seq/issues/26">GitHub</a> &amp; <a href="https://academic.oup.com/bioinformatics/article-abstract/38/10/2791/6565315">Paper</a>)</p>
 </blockquote>
-<div id="cell-29" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="288">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># set hash ID as factors</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(obj_list)){</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    obj_list[[x]]<span class="sc">$</span>hash.ID <span class="ot">&lt;-</span> <span class="fu">factor</span>(obj_list[[x]]<span class="sc">$</span>hash.ID, <span class="fu">levels</span>(obj_list[[x]]<span class="sc">$</span>MULTI_ID))}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div id="cell-30" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="302">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Visualize HTODemux &amp; MULTIseqDemux assignment for filtered_matrix_1</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">12</span>, <span class="at">repr.plot.height=</span> <span class="dv">8</span>)</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>plist <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>plist[[<span class="fu">length</span>(plist) <span class="sc">+</span> <span class="dv">1</span>]] <span class="ot">&lt;-</span> <span class="fu">scUMAP</span>(obj_list[[<span class="dv">1</span>]], <span class="at">reduction =</span> <span class="st">"umap_hto"</span>, <span class="at">group.by =</span> <span class="st">"HTO_classification.global"</span>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"HTODemux"</span>, <span class="at">subtitle =</span> <span class="st">"filtered_matrix_1"</span> )</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>plist[[<span class="fu">length</span>(plist) <span class="sc">+</span> <span class="dv">1</span>]] <span class="ot">&lt;-</span> <span class="fu">scUMAP</span>(obj_list[[<span class="dv">1</span>]], <span class="at">reduction =</span> <span class="st">"umap_hto"</span>, <span class="at">group.by =</span> <span class="st">"hash.ID"</span>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"HTODemux"</span>, <span class="at">subtitle =</span> <span class="st">"filtered_matrix_1"</span>)</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>plist[[<span class="fu">length</span>(plist) <span class="sc">+</span> <span class="dv">1</span>]] <span class="ot">&lt;-</span> <span class="fu">scUMAP</span>(obj_list[[<span class="dv">1</span>]], <span class="at">reduction =</span> <span class="st">"umap_hto"</span>, <span class="at">group.by =</span> <span class="st">"MULTI.global"</span>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"MULTIseqDemux"</span>, <span class="at">subtitle =</span> <span class="st">"filtered_matrix_1"</span>)</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>plist[[<span class="fu">length</span>(plist) <span class="sc">+</span> <span class="dv">1</span>]] <span class="ot">&lt;-</span> <span class="fu">scUMAP</span>(obj_list[[<span class="dv">1</span>]], <span class="at">reduction =</span> <span class="st">"umap_hto"</span>, <span class="at">group.by =</span> <span class="st">"MULTI_ID"</span>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"MULTIseqDemux"</span>, <span class="at">subtitle =</span> <span class="st">"filtered_matrix_1"</span>)</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>r <span class="ot">=</span> <span class="dv">2</span>; xc <span class="ot">=</span> <span class="dv">2</span>; yc <span class="ot">=</span> <span class="dv">6</span></span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="fu">seq_along</span>(plist)){</span>
-<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>    plist[[x]] <span class="ot">&lt;-</span> plist[[x]] <span class="sc">+</span></span>
-<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>        <span class="fu">annotate</span>(<span class="st">"path"</span>,</span>
-<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>            <span class="at">x=</span>xc<span class="sc">+</span>r<span class="sc">*</span><span class="fu">cos</span>(<span class="fu">seq</span>(<span class="dv">0</span>,<span class="dv">2</span><span class="sc">*</span>pi,<span class="at">length.out=</span><span class="dv">100</span>)),</span>
-<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>            <span class="at">y=</span>yc<span class="sc">+</span>r<span class="sc">*</span><span class="fu">sin</span>(<span class="fu">seq</span>(<span class="dv">0</span>,<span class="dv">2</span><span class="sc">*</span>pi,<span class="at">length.out=</span><span class="dv">100</span>)),</span>
-<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>            <span class="at">size =</span> <span class="dv">1</span>,</span>
-<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>            <span class="at">linetype =</span> <span class="st">"dashed"</span>)}</span>
-<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>r <span class="ot">=</span> <span class="dv">4</span>; xc <span class="ot">=</span> <span class="sc">-</span><span class="fl">2.8</span>; yc <span class="ot">=</span> <span class="sc">-</span><span class="fl">3.5</span></span>
-<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="fu">seq_along</span>(plist)){</span>
-<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>    plist[[x]] <span class="ot">&lt;-</span> plist[[x]] <span class="sc">+</span></span>
-<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>        <span class="fu">annotate</span>(<span class="st">"path"</span>,</span>
-<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>            <span class="at">x=</span>xc<span class="sc">+</span>r<span class="sc">*</span><span class="fu">cos</span>(<span class="fu">seq</span>(<span class="dv">0</span>,<span class="dv">2</span><span class="sc">*</span>pi,<span class="at">length.out=</span><span class="dv">100</span>)),</span>
-<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>            <span class="at">y=</span>yc<span class="sc">+</span>r<span class="sc">*</span><span class="fu">sin</span>(<span class="fu">seq</span>(<span class="dv">0</span>,<span class="dv">2</span><span class="sc">*</span>pi,<span class="at">length.out=</span><span class="dv">100</span>)),</span>
-<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>            <span class="at">size =</span> <span class="dv">1</span>,</span>
-<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a>            <span class="at">linetype =</span> <span class="st">"dashed"</span>)}</span>
-<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_grid</span>(<span class="at">plotlist =</span> plist, <span class="at">ncol =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="1.3_demux_files/figure-html/cell-19-output-1.png" class="img-fluid figure-img"></p>
-</figure>
-</div>
-</div>
-</div>
-<div id="cell-31" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="306">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Visualize HTODemux &amp; MULTIseqDemux assignment for filtered_matrix_2</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">12</span>, <span class="at">repr.plot.height=</span> <span class="dv">8</span>)</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>plist <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>plist[[<span class="fu">length</span>(plist) <span class="sc">+</span> <span class="dv">1</span>]] <span class="ot">&lt;-</span> <span class="fu">scUMAP</span>(obj_list[[<span class="dv">2</span>]], <span class="at">reduction =</span> <span class="st">"umap_hto"</span>, <span class="at">group.by =</span> <span class="st">"HTO_classification.global"</span>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"HTODemux"</span>, <span class="at">subtitle =</span> <span class="st">"filtered_matrix_2"</span> )</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>plist[[<span class="fu">length</span>(plist) <span class="sc">+</span> <span class="dv">1</span>]] <span class="ot">&lt;-</span> <span class="fu">scUMAP</span>(obj_list[[<span class="dv">2</span>]], <span class="at">reduction =</span> <span class="st">"umap_hto"</span>, <span class="at">group.by =</span> <span class="st">"hash.ID"</span>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"HTODemux"</span>, <span class="at">subtitle =</span> <span class="st">"filtered_matrix_2"</span>)</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>plist[[<span class="fu">length</span>(plist) <span class="sc">+</span> <span class="dv">1</span>]] <span class="ot">&lt;-</span> <span class="fu">scUMAP</span>(obj_list[[<span class="dv">2</span>]], <span class="at">reduction =</span> <span class="st">"umap_hto"</span>, <span class="at">group.by =</span> <span class="st">"MULTI.global"</span>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"MULTIseqDemux"</span>, <span class="at">subtitle =</span> <span class="st">"filtered_matrix_2"</span>)</span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>plist[[<span class="fu">length</span>(plist) <span class="sc">+</span> <span class="dv">1</span>]] <span class="ot">&lt;-</span> <span class="fu">scUMAP</span>(obj_list[[<span class="dv">2</span>]], <span class="at">reduction =</span> <span class="st">"umap_hto"</span>, <span class="at">group.by =</span> <span class="st">"MULTI_ID"</span>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"MULTIseqDemux"</span>, <span class="at">subtitle =</span> <span class="st">"filtered_matrix_2"</span>)</span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>r <span class="ot">=</span> <span class="fl">3.5</span>; xc <span class="ot">=</span> <span class="sc">-</span><span class="dv">0</span>; yc <span class="ot">=</span> <span class="sc">-</span><span class="fl">3.5</span></span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="fu">seq_along</span>(plist)){</span>
-<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>    plist[[x]] <span class="ot">&lt;-</span> plist[[x]] <span class="sc">+</span></span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>        <span class="fu">annotate</span>(<span class="st">"path"</span>,</span>
-<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>            <span class="at">x=</span>xc<span class="sc">+</span>r<span class="sc">*</span><span class="fu">cos</span>(<span class="fu">seq</span>(<span class="dv">0</span>,<span class="dv">2</span><span class="sc">*</span>pi,<span class="at">length.out=</span><span class="dv">100</span>)),</span>
-<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>            <span class="at">y=</span>yc<span class="sc">+</span>r<span class="sc">*</span><span class="fu">sin</span>(<span class="fu">seq</span>(<span class="dv">0</span>,<span class="dv">2</span><span class="sc">*</span>pi,<span class="at">length.out=</span><span class="dv">100</span>)),</span>
-<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>            <span class="at">size =</span> <span class="dv">1</span>,</span>
-<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>            <span class="at">linetype =</span> <span class="st">"dashed"</span>)}</span>
-<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_grid</span>(<span class="at">plotlist =</span> plist, <span class="at">ncol =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="1.3_demux_files/figure-html/cell-20-output-1.png" class="img-fluid figure-img"></p>
-</figure>
-</div>
-</div>
-</div>
 </section>
-<section id="sec-htosignal" class="level2" data-number="5.6">
-<h2 data-number="5.6" class="anchored" data-anchor-id="sec-htosignal"><span class="header-section-number">5.6</span> Separation of HTO Signal</h2>
+<section id="sec-htosignal" class="level2" data-number="5.5">
+<h2 data-number="5.5" class="anchored" data-anchor-id="sec-htosignal"><span class="header-section-number">5.5</span> Separation of HTO Signal</h2>
 <p>Furthermore we will inspect the hashtag signal for the demultiplexed cells in both samples to determine whether HTODemux or MULTIseqDemux is better.</p>
 <blockquote class="blockquote">
 <p>MULTIseqDemux can separate signals from individual tags better for both sequencing runs, especially for Hashtag-8.</p>
 </blockquote>
-<div id="cell-33" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="291">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Ridge plot of each hashtag in demultiplexed cells for filtered_matrix_1</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">20</span>, <span class="at">repr.plot.height=</span> <span class="dv">8</span>)</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="fu">RidgePlot</span>(obj_list[[<span class="dv">1</span>]], <span class="at">assay =</span> <span class="st">"HTO"</span>, <span class="at">group.by =</span> <span class="st">"hash.ID"</span>, <span class="at">features =</span> <span class="fu">rownames</span>(obj_list[[<span class="dv">1</span>]][[<span class="st">"HTO"</span>]]), <span class="at">ncol =</span> <span class="dv">3</span>)</span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="fu">RidgePlot</span>(obj_list[[<span class="dv">1</span>]], <span class="at">assay =</span> <span class="st">"HTO"</span>, <span class="at">group.by =</span> <span class="st">"MULTI_ID"</span>, <span class="at">features =</span> <span class="fu">rownames</span>(obj_list[[<span class="dv">1</span>]][[<span class="st">"HTO"</span>]]), <span class="at">ncol =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-24" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="28">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Ridge plot of each hashtag in demultiplexed cells for filtered_matrix_1</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">20</span>, <span class="at">repr.plot.height=</span> <span class="dv">4</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">RidgePlot</span>(obj.list[[<span class="dv">1</span>]], <span class="at">assay =</span> <span class="st">"HTO"</span>, <span class="at">group.by =</span> <span class="st">"hash.ID"</span>, <span class="at">features =</span> <span class="fu">rownames</span>(obj.list[[<span class="dv">1</span>]][[<span class="st">"HTO"</span>]]), <span class="at">ncol =</span> <span class="dv">4</span>)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="fu">RidgePlot</span>(obj.list[[<span class="dv">1</span>]], <span class="at">assay =</span> <span class="st">"HTO"</span>, <span class="at">group.by =</span> <span class="st">"MULTI_ID"</span>, <span class="at">features =</span> <span class="fu">rownames</span>(obj.list[[<span class="dv">1</span>]][[<span class="st">"HTO"</span>]]), <span class="at">ncol =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Picking joint bandwidth of 0.0327
+<pre><code>Picking joint bandwidth of 0.0667
 
-Picking joint bandwidth of 0.0447
+Picking joint bandwidth of 0.0643
 
-Picking joint bandwidth of 0.0344
+Picking joint bandwidth of 0.109
 
-Picking joint bandwidth of 0.0754
-
-Picking joint bandwidth of 0.0755
-
-Picking joint bandwidth of 0.0844
-
-Picking joint bandwidth of 0.0336
-
-Picking joint bandwidth of 0.0523
-
-Picking joint bandwidth of 0.0353
-
-Picking joint bandwidth of 0.0992
-
-Picking joint bandwidth of 0.0899
-
-Picking joint bandwidth of 0.0971
-</code></pre>
-</div>
-<div class="cell-output cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="1.3_demux_files/figure-html/cell-21-output-2.png" class="img-fluid figure-img"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="1.3_demux_files/figure-html/cell-21-output-3.png" class="img-fluid figure-img"></p>
-</figure>
-</div>
-</div>
-</div>
-<div id="cell-34" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="292">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Ridge plot of each hashtag in demultiplexed cells for filtered_matrix_2</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">20</span>, <span class="at">repr.plot.height=</span> <span class="dv">8</span>)</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">RidgePlot</span>(obj_list[[<span class="dv">2</span>]], <span class="at">assay =</span> <span class="st">"HTO"</span>, <span class="at">group.by =</span> <span class="st">"hash.ID"</span>, <span class="at">features =</span> <span class="fu">rownames</span>(obj_list[[<span class="dv">2</span>]][[<span class="st">"HTO"</span>]]), <span class="at">ncol =</span> <span class="dv">3</span>)</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="fu">RidgePlot</span>(obj_list[[<span class="dv">2</span>]], <span class="at">assay =</span> <span class="st">"HTO"</span>, <span class="at">group.by =</span> <span class="st">"MULTI_ID"</span>, <span class="at">features =</span> <span class="fu">rownames</span>(obj_list[[<span class="dv">2</span>]][[<span class="st">"HTO"</span>]]), <span class="at">ncol =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Picking joint bandwidth of 0.0303
-
-Picking joint bandwidth of 0.04
-
-Picking joint bandwidth of 0.031
-
-Picking joint bandwidth of 0.074
+Picking joint bandwidth of 0.0714
 
 Picking joint bandwidth of 0.0729
 
-Picking joint bandwidth of 0.0874
+Picking joint bandwidth of 0.0678
 
-Picking joint bandwidth of 0.0271
+Picking joint bandwidth of 0.11
 
-Picking joint bandwidth of 0.0471
-
-Picking joint bandwidth of 0.0306
-
-Picking joint bandwidth of 0.0961
-
-Picking joint bandwidth of 0.0849
-
-Picking joint bandwidth of 0.089
+Picking joint bandwidth of 0.0698
 </code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="1.3_demux_files/figure-html/cell-22-output-2.png" class="img-fluid figure-img"></p>
+<p><img src="1.3_demux_files/figure-html/cell-14-output-2.png" class="img-fluid figure-img"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="1.3_demux_files/figure-html/cell-22-output-3.png" class="img-fluid figure-img"></p>
+<p><img src="1.3_demux_files/figure-html/cell-14-output-3.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-25" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="29">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Ridge plot of each hashtag in demultiplexed cells for filtered_matrix_2</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">20</span>, <span class="at">repr.plot.height=</span> <span class="dv">4</span>)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">RidgePlot</span>(obj.list[[<span class="dv">2</span>]], <span class="at">assay =</span> <span class="st">"HTO"</span>, <span class="at">group.by =</span> <span class="st">"hash.ID"</span>, <span class="at">features =</span> <span class="fu">rownames</span>(obj.list[[<span class="dv">2</span>]][[<span class="st">"HTO"</span>]]), <span class="at">ncol =</span> <span class="dv">4</span>)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="fu">RidgePlot</span>(obj.list[[<span class="dv">2</span>]], <span class="at">assay =</span> <span class="st">"HTO"</span>, <span class="at">group.by =</span> <span class="st">"MULTI_ID"</span>, <span class="at">features =</span> <span class="fu">rownames</span>(obj.list[[<span class="dv">2</span>]][[<span class="st">"HTO"</span>]]), <span class="at">ncol =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Picking joint bandwidth of 0.0609
+
+Picking joint bandwidth of 0.0685
+
+Picking joint bandwidth of 0.0582
+
+Picking joint bandwidth of 0.0799
+
+Picking joint bandwidth of 0.0511
+
+Picking joint bandwidth of 0.0622
+
+Picking joint bandwidth of 0.044
+
+Picking joint bandwidth of 0.0673
+</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1.3_demux_files/figure-html/cell-15-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1.3_demux_files/figure-html/cell-15-output-3.png" class="img-fluid figure-img"></p>
 </figure>
 </div>
 </div>
@@ -1007,11 +794,11 @@ Picking joint bandwidth of 0.089
 </section>
 <section id="session-info" class="level2 unnumbered">
 <h2 class="unnumbered anchored" data-anchor-id="session-info">Session Info</h2>
-<div id="cell-37" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="293">
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qsave</span>(obj_list, <span class="st">"seurat/20240826_GSE155224_demux.qs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-28" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="32">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qsave</span>(obj.list, <span class="st">"seurat/1_processing/1.3_GSE247917_demux.qs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="cell-38" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="294">
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-29" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="31">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <pre><code>R version 4.3.2 (2023-10-31)
 Platform: x86_64-conda-linux-gnu (64-bit)
@@ -1036,122 +823,128 @@ attached base packages:
 [8] methods   base     
 
 other attached packages:
- [1] qs_0.26.3                   viridis_0.6.4              
- [3] viridisLite_0.4.2           ggalluvial_0.12.5          
- [5] ggnewscale_0.4.9            ggrepel_0.9.4              
- [7] UCell_2.4.0                 writexl_1.4.2              
- [9] readxl_1.4.3                wesanderson_0.3.6.9000     
-[11] ComplexHeatmap_2.16.0       cluster_2.1.4              
-[13] lmtest_0.9-40               zoo_1.8-12                 
-[15] binaryLogic_0.3.9           jaccard_0.1.0              
-[17] RColorBrewer_1.1-3          celda_1.16.1               
-[19] Matrix_1.6-1                SingleCellExperiment_1.24.0
-[21] SummarizedExperiment_1.32.0 Biobase_2.62.0             
-[23] GenomicRanges_1.54.1        GenomeInfoDb_1.38.0        
-[25] IRanges_2.36.0              S4Vectors_0.40.1           
-[27] BiocGenerics_0.48.0         MatrixGenerics_1.14.0      
-[29] matrixStats_1.0.0           ggpubr_0.6.0               
-[31] rstatix_0.7.2               gridExtra_2.3              
-[33] scales_1.3.0                clustree_0.5.0             
-[35] ggraph_2.1.0                cowplot_1.1.1              
-[37] patchwork_1.2.0             SeuratDisk_0.0.0.9021      
-[39] tonsilref.SeuratData_2.0.0  pbmcref.SeuratData_1.0.0   
-[41] pbmc3k.SeuratData_3.1.4     SeuratData_0.2.2.9001      
-[43] Seurat_5.0.0                SeuratObject_5.0.0         
-[45] sp_2.1-1                    lubridate_1.9.3            
-[47] forcats_1.0.0               stringr_1.5.0              
-[49] dplyr_1.1.4                 purrr_1.0.2                
-[51] readr_2.1.4                 tidyr_1.3.0                
-[53] tibble_3.2.1                ggplot2_3.5.1              
-[55] tidyverse_2.0.0             biomaRt_2.58.0             
+ [1] scUnify_0.0.0.9000          ComplexHeatmap_2.16.0      
+ [3] DoubletFinder_2.0.4         scDblFinder_1.14.0         
+ [5] celda_1.16.1                Matrix_1.6-1               
+ [7] SingleCellExperiment_1.24.0 SummarizedExperiment_1.32.0
+ [9] Biobase_2.62.0              GenomicRanges_1.54.1       
+[11] GenomeInfoDb_1.38.0         IRanges_2.36.0             
+[13] S4Vectors_0.40.1            BiocGenerics_0.48.0        
+[15] MatrixGenerics_1.14.0       matrixStats_1.0.0          
+[17] UCell_2.4.0                 BiocParallel_1.36.0        
+[19] biomaRt_2.58.0              ggh4x_0.2.5                
+[21] harmony_1.1.0               Rcpp_1.0.11                
+[23] Seurat_5.0.0                SeuratObject_5.0.0         
+[25] sp_2.1-1                    ggpubr_0.6.0               
+[27] rstatix_0.7.2               writexl_1.4.2              
+[29] readxl_1.4.3                qs_0.26.3                  
+[31] RColorBrewer_1.1-3          wesanderson_0.3.6.9000     
+[33] viridis_0.6.4               viridisLite_0.4.2          
+[35] gridExtra_2.3               scales_1.3.0               
+[37] cowplot_1.1.1               patchwork_1.2.0            
+[39] ggrepel_0.9.4               lubridate_1.9.3            
+[41] forcats_1.0.0               stringr_1.5.0              
+[43] dplyr_1.1.4                 purrr_1.0.2                
+[45] readr_2.1.4                 tidyr_1.3.0                
+[47] tibble_3.2.1                ggplot2_3.5.1              
+[49] tidyverse_2.0.0            
 
 loaded via a namespace (and not attached):
-  [1] igraph_1.5.1               ica_1.0-3                 
-  [3] plotly_4.10.3              zlibbioc_1.48.0           
-  [5] tidyselect_1.2.0           bit_4.0.5                 
-  [7] doParallel_1.0.17          clue_0.3-64               
-  [9] lattice_0.21-8             rjson_0.2.21              
- [11] blob_1.2.4                 S4Arrays_1.2.0            
- [13] parallel_4.3.2             png_0.1-8                 
- [15] cli_3.6.1                  goftest_1.2-3             
- [17] BiocNeighbors_1.18.0       uwot_0.1.16               
- [19] curl_5.1.0                 mime_0.12                 
- [21] evaluate_0.23              leiden_0.4.3              
- [23] stringi_1.7.12             backports_1.4.1           
- [25] assertive.numbers_0.0-2    XML_3.99-0.14             
- [27] httpuv_1.6.12              AnnotationDbi_1.64.0      
- [29] magrittr_2.0.3             rappdirs_0.3.3            
- [31] splines_4.3.2              RApiSerialize_0.1.2       
- [33] ggbeeswarm_0.7.2           sctransform_0.4.1         
- [35] DBI_1.1.3                  withr_2.5.2               
- [37] assertive.base_0.0-9       tidygraph_1.2.3           
- [39] htmlwidgets_1.6.2          IRkernel_1.3.2            
- [41] labeling_0.4.3             SparseArray_1.2.0         
- [43] cellranger_1.1.0           reticulate_1.34.0         
- [45] XVector_0.42.0             timechange_0.2.0          
- [47] foreach_1.5.2              fansi_1.0.5               
- [49] data.table_1.14.8          R.oo_1.25.0               
- [51] RSpectra_0.16-1            irlba_2.3.5.1             
- [53] ggrastr_1.0.2              fastDummies_1.7.3         
- [55] gridGraphics_0.5-1         ellipsis_0.3.2            
- [57] lazyeval_0.2.2             survival_3.5-7            
- [59] scattermore_1.2            crayon_1.5.2              
- [61] RcppAnnoy_0.0.21           IRdisplay_1.1             
- [63] progressr_0.14.0           tweenr_2.0.2              
- [65] later_1.3.1                ggridges_0.5.4            
- [67] assertive.types_0.0-3      codetools_0.2-19          
- [69] base64enc_0.1-3            GlobalOptions_0.1.2       
- [71] KEGGREST_1.42.0            Rtsne_0.16                
- [73] shape_1.4.6                filelock_1.0.2            
- [75] pkgconfig_2.0.3            xml2_1.3.5                
- [77] spatstat.sparse_3.0-3      multipanelfigure_2.1.2    
- [79] xtable_1.8-4               car_3.1-2                 
- [81] plyr_1.8.9                 httr_1.4.7                
- [83] tools_4.3.2                globals_0.16.2            
- [85] beeswarm_0.4.0             broom_1.0.5               
- [87] nlme_3.1-163               dbplyr_2.4.0              
- [89] hdf5r_1.3.8                digest_0.6.33             
- [91] farver_2.1.1               tzdb_0.4.0                
- [93] reshape2_1.4.4             WriteXLS_6.4.0            
- [95] glue_1.6.2                 cachem_1.0.8              
- [97] BiocFileCache_2.10.1       polyclip_1.10-6           
- [99] generics_0.1.3             Biostrings_2.70.1         
-[101] parallelly_1.36.0          RcppHNSW_0.5.0            
-[103] carData_3.0-5              pbapply_1.7-2             
-[105] assertive.properties_0.0-5 spam_2.10-0               
-[107] utf8_1.2.4                 assertive.files_0.0-2     
-[109] graphlayouts_1.0.0         ggsignif_0.6.4            
-[111] RcppEigen_0.3.3.9.3        shiny_1.7.5.1             
-[113] GenomeInfoDbData_1.2.11    R.utils_2.12.2            
-[115] RCurl_1.98-1.12            memoise_2.0.1             
-[117] R.methodsS3_1.8.2          future_1.33.0             
-[119] RANN_2.6.1                 stringfish_0.16.0         
-[121] spatstat.data_3.0-3        spatstat.utils_3.0-5      
-[123] hms_1.1.3                  fitdistrplus_1.1-11       
-[125] munsell_0.5.0              colorspace_2.1-0          
-[127] rlang_1.1.3                dotCall64_1.1-0           
-[129] ggforce_0.4.1              circlize_0.4.15           
-[131] iterators_1.0.14           abind_1.4-5               
-[133] MCMCprecision_0.4.0        repr_1.1.6                
-[135] bitops_1.0-7               promises_1.2.1            
-[137] RSQLite_2.3.2              qvalue_2.32.0             
-[139] DelayedArray_0.28.0        pbdZMQ_0.3-9              
-[141] compiler_4.3.2             prettyunits_1.2.0         
-[143] listenv_0.9.0              Rcpp_1.0.11               
-[145] enrichR_3.2                tensor_1.5                
-[147] MASS_7.3-60                progress_1.2.2            
-[149] uuid_1.1-1                 BiocParallel_1.36.0       
-[151] spatstat.random_3.2-1      R6_2.5.1                  
-[153] fastmap_1.1.1              vipor_0.4.5               
-[155] ROCR_1.0-11                gtable_0.3.4              
-[157] KernSmooth_2.23-22         miniUI_0.1.1.1            
-[159] deldir_1.0-9               htmltools_0.5.6.1         
-[161] RcppParallel_5.1.7         bit64_4.0.5               
-[163] spatstat.explore_3.2-5     lifecycle_1.0.3           
-[165] vctrs_0.6.4                spatstat.geom_3.2-7       
-[167] future.apply_1.11.0        pillar_1.9.0              
-[169] magick_2.8.1               combinat_0.0-8            
-[171] jsonlite_1.8.7             GetoptLong_1.0.5          </code></pre>
+  [1] progress_1.2.2             goftest_1.2-3             
+  [3] Biostrings_2.70.1          vctrs_0.6.4               
+  [5] spatstat.random_3.2-1      RApiSerialize_0.1.2       
+  [7] digest_0.6.33              png_0.1-8                 
+  [9] shape_1.4.6                IRdisplay_1.1             
+ [11] deldir_1.0-9               parallelly_1.36.0         
+ [13] combinat_0.0-8             magick_2.8.1              
+ [15] MASS_7.3-60                reshape2_1.4.4            
+ [17] httpuv_1.6.12              foreach_1.5.2             
+ [19] withr_3.0.1                ggrastr_1.0.2             
+ [21] ellipsis_0.3.2             survival_3.5-7            
+ [23] memoise_2.0.1              ggbeeswarm_0.7.2          
+ [25] zoo_1.8-12                 GlobalOptions_0.1.2       
+ [27] pbapply_1.7-2              IRkernel_1.3.2            
+ [29] prettyunits_1.2.0          KEGGREST_1.42.0           
+ [31] promises_1.2.1             httr_1.4.7                
+ [33] restfulr_0.0.15            globals_0.16.2            
+ [35] fitdistrplus_1.1-11        stringfish_0.16.0         
+ [37] dsb_1.0.4                  miniUI_0.1.1.1            
+ [39] generics_0.1.3             base64enc_0.1-3           
+ [41] curl_5.1.0                 repr_1.1.6                
+ [43] zlibbioc_1.48.0            ScaledMatrix_1.8.1        
+ [45] polyclip_1.10-6            GenomeInfoDbData_1.2.11   
+ [47] SparseArray_1.2.0          RcppEigen_0.3.3.9.3       
+ [49] xtable_1.8-4               doParallel_1.0.17         
+ [51] evaluate_0.23              S4Arrays_1.2.0            
+ [53] BiocFileCache_2.10.1       hms_1.1.3                 
+ [55] irlba_2.3.5.1              colorspace_2.1-0          
+ [57] filelock_1.0.2             ROCR_1.0-11               
+ [59] reticulate_1.34.0          spatstat.data_3.0-3       
+ [61] magrittr_2.0.3             lmtest_0.9-40             
+ [63] later_1.3.1                lattice_0.21-8            
+ [65] spatstat.geom_3.2-7        future.apply_1.11.0       
+ [67] scattermore_1.2            XML_3.99-0.14             
+ [69] scuttle_1.10.3             assertive.numbers_0.0-2   
+ [71] RcppAnnoy_0.0.21           pillar_1.9.0              
+ [73] nlme_3.1-163               iterators_1.0.14          
+ [75] compiler_4.3.2             beachmat_2.18.0           
+ [77] RSpectra_0.16-1            stringi_1.7.12            
+ [79] assertive.properties_0.0-5 tensor_1.5                
+ [81] GenomicAlignments_1.38.0   MCMCprecision_0.4.0       
+ [83] plyr_1.8.9                 crayon_1.5.2              
+ [85] abind_1.4-5                BiocIO_1.12.0             
+ [87] scater_1.28.0              gridGraphics_0.5-1        
+ [89] locfit_1.5-9.8             bit_4.0.5                 
+ [91] codetools_0.2-19           BiocSingular_1.16.0       
+ [93] GetoptLong_1.0.5           plotly_4.10.3             
+ [95] mime_0.12                  splines_4.3.2             
+ [97] circlize_0.4.15            fastDummies_1.7.3         
+ [99] dbplyr_2.4.0               sparseMatrixStats_1.14.0  
+[101] cellranger_1.1.0           blob_1.2.4                
+[103] utf8_1.2.4                 clue_0.3-64               
+[105] pbdZMQ_0.3-9               WriteXLS_6.4.0            
+[107] listenv_0.9.0              DelayedMatrixStats_1.24.0 
+[109] ggsignif_0.6.4             assertive.base_0.0-9      
+[111] statmod_1.5.0              tzdb_0.4.0                
+[113] pkgconfig_2.0.3            tools_4.3.2               
+[115] cachem_1.0.8               RSQLite_2.3.2             
+[117] DBI_1.1.3                  fastmap_1.1.1             
+[119] ica_1.0-3                  Rsamtools_2.18.0          
+[121] broom_1.0.5                dotCall64_1.1-0           
+[123] carData_3.0-5              RANN_2.6.1                
+[125] farver_2.1.1               yaml_2.3.7                
+[127] rtracklayer_1.62.0         cli_3.6.1                 
+[129] assertive.types_0.0-3      leiden_0.4.3              
+[131] lifecycle_1.0.3            uwot_0.1.16               
+[133] bluster_1.10.0             assertive.files_0.0-2     
+[135] backports_1.4.1            timechange_0.2.0          
+[137] gtable_0.3.4               rjson_0.2.21              
+[139] ggridges_0.5.4             progressr_0.14.0          
+[141] parallel_4.3.2             limma_3.56.2              
+[143] jsonlite_1.8.7             edgeR_3.42.4              
+[145] RcppHNSW_0.5.0             bitops_1.0-7              
+[147] bit64_4.0.5                xgboost_1.7.7.1           
+[149] Rtsne_0.16                 spatstat.utils_3.0-5      
+[151] BiocNeighbors_1.18.0       RcppParallel_5.1.7        
+[153] metapod_1.8.0              dqrng_0.3.1               
+[155] enrichR_3.2                lazyeval_0.2.2            
+[157] shiny_1.7.5.1              htmltools_0.5.6.1         
+[159] sctransform_0.4.1          rappdirs_0.3.3            
+[161] glue_1.8.0                 spam_2.10-0               
+[163] XVector_0.42.0             RCurl_1.98-1.12           
+[165] scran_1.28.2               mclust_6.0.1              
+[167] igraph_1.5.1               R6_2.5.1                  
+[169] labeling_0.4.3             cluster_2.1.4             
+[171] DelayedArray_0.28.0        tidyselect_1.2.0          
+[173] vipor_0.4.5                xml2_1.3.5                
+[175] car_3.1-2                  AnnotationDbi_1.64.0      
+[177] future_1.33.0              rsvd_1.0.5                
+[179] munsell_0.5.0              KernSmooth_2.23-22        
+[181] multipanelfigure_2.1.2     data.table_1.14.8         
+[183] htmlwidgets_1.6.2          rlang_1.1.4               
+[185] spatstat.sparse_3.0-3      spatstat.explore_3.2-5    
+[187] uuid_1.1-1                 fansi_1.0.6               
+[189] beeswarm_0.4.0            </code></pre>
 </div>
 </div>
 
@@ -1604,8 +1397,8 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../../sections/1_processing/1.4_doublets.html" class="pagination-link" aria-label="<span class='chapter-number'>6</span>&nbsp; <span class='chapter-title'>Doublet Detection</span>">
-        <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Doublet Detection</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../../sections/1_processing/1.4_qualitycontrol.html" class="pagination-link" aria-label="<span class='chapter-number'>6</span>&nbsp; <span class='chapter-title'>Quality Control</span>">
+        <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Quality Control</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

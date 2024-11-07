@@ -37,9 +37,9 @@ book:
       - sections/1_processing/1.1_cellranger.ipynb
       - sections/1_processing/1.2_seurat.ipynb
       - sections/1_processing/1.3_demux.ipynb
-      - sections/1_processing/1.4_doublets.ipynb
+      - sections/1_processing/1.4_qualitycontrol.ipynb
       - sections/1_processing/1.5_decont.ipynb
-      - sections/1_processing/1.6_qc.ipynb
+      - sections/1_processing/1.6_doublets.ipynb
     - text: "---"
     - part: "**Chapter 2 : Cell Classification**\n"
       chapters:
@@ -55,6 +55,7 @@ book:
 
 format:
   html:
+    fontsize: 0.8em
     theme: 
       - flatly
     grid:

@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Matthew Hung">
-<meta name="dcterms.date" content="2024-10-24">
+<meta name="dcterms.date" content="2024-11-06">
 
 <title>Single-Cell Workbook - 3&nbsp; CellRanger (Multi)</title>
 <style>
@@ -221,8 +221,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../sections/1_processing/1.4_doublets.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Doublet Detection</span></span></a>
+  <a href="../../sections/1_processing/1.4_qualitycontrol.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Quality Control</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -233,8 +233,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../sections/1_processing/1.6_qc.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Quality Control</span></span></a>
+  <a href="../../sections/1_processing/1.6_doublets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Doublet Detection</span></span></a>
   </div>
 </li>
       </ul>
@@ -309,7 +309,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">2024-10-24</p>
+      <p class="date">2024-11-06</p>
     </div>
   </div>
   
@@ -362,7 +362,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>As you can see from the SraRunTable.txt file below, sequencing run identifiers and BioProject IDs are stored in the &lt;Run&gt; and &lt;BioProject&gt; columns. Next we will get the relevant sequencing run identifiers from the SraRunTable.txt file below and store these as a .txt file.</p>
-<div id="cell-9" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="18">
+<div id="cell-9" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="do">## see structure of SraRunTable.txt</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>sra <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input/SraRunTable.txt"</span>, <span class="at">sep =</span> <span class="st">","</span>)</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(sra)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -404,7 +404,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  $ treatment                     : chr  "COVID-19" "COVID-19" "COVID-19" "COVID-19" ...</code></pre>
 </div>
 </div>
-<div id="cell-10" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="19">
+<div id="cell-10" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># select CV10, CV12</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>select <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"PRJNA1040901"</span>, <span class="st">"PRJNA1040899"</span>)</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>sra <span class="ot">&lt;-</span> sra <span class="sc">%&gt;%</span> <span class="fu">filter</span>(BioProject <span class="sc">%in%</span> select) <span class="sc">%&gt;%</span> <span class="fu">select</span>(BioProject, Run, library_type, treatment)</span>
@@ -768,7 +768,7 @@ NTTTGAACACTCTAATTTTTTCAAAGTAAACGCTTCGGGCCCCGCGGGACACTCAGCTAAGAGCATCGAGGGGGCGCCGA
 <section id="step2---batch_id.txt" class="level3 unnumbered">
 <h3 class="unnumbered anchored" data-anchor-id="step2---batch_id.txt"><font color="grey">Step2 -</font> batch_id.txt</h3>
 <p>Specify sequencing sample names (CV10, CV12) in “batch_id.txt” file.</p>
-<div id="cell-32" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="42">
+<div id="cell-32" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="14">
 <div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="do">## show batch_id.txt</span></span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">write.table</span>(<span class="fu">c</span>(<span class="st">"CV10"</span>, <span class="st">"CV12"</span>), <span class="st">"/camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/batch_id.txt"</span>, <span class="at">col.names =</span> F, <span class="at">row.names =</span> F, <span class="at">quote =</span> F)</span>
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat_content</span>(<span class="st">"/camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/batch_id.txt"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -794,21 +794,21 @@ Warning
 <p>Please do not change the number of lines in the script as this is critical for Step 5 to run properly.</p>
 </div>
 </div>
-<div id="cell-34" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="11">
+<div id="cell-34" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat_content</span>(<span class="st">"/camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/config.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># This template shows the possible cellranger multi config CSV options for analyzing Single Cell Gene Expression with Feature Barcode Technology (Antibody Capture, CRISPR Guide Capture, Cell Multiplexing, Antigen Capture), Fixed RNA Profiling, or Single Cell Immune Profiling data. 
 # These options cannot be used all together - see section descriptions for detail.
 # Use 'cellranger multi-template --parameters' to see descriptions of all parameters.
-# Please see cellranger multi documentation for details and experimental design-specific examples at https://www.10xgenomics.com/support.
 
 [gene-expression]
 reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-gex-GRCh38-2020-A
+create-bam,true
 # probe-set,/path/to/probe/set, # Required, Fixed RNA Profiling only. 
 # filter-probes,&lt;true|false&gt;, # Optional, Fixed RNA Profiling only. 
 # r1-length,&lt;int&gt;
 # r2-length,&lt;int&gt;
-# chemistry,SC5P-R2
+chemistry,SC5P-R2
 # expect-cells,&lt;auto&gt;
 # force-cells,&lt;auto&gt;
 # no-secondary,&lt;true|false&gt;
@@ -822,7 +822,7 @@ reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-gex-GRCh38
 # barcode-sample-assignment,/path/to/barcode-sample-assignment/csv, # Optional, Cell Multiplexing only.
 
 [feature] # For Feature Barcode libraries only
-
+reference,/camp/home/hungm/scratch/hungm/anqi/AX_SC24151/logs/input/SC24151_features.csv
 # r1-length,&lt;int&gt;
 # r2-length,&lt;int&gt;
 
@@ -870,21 +870,23 @@ fastq_id,fastqs,lanes,feature_types
 <section id="step4---feature_reference.csv" class="level3 unnumbered">
 <h3 class="unnumbered anchored" data-anchor-id="step4---feature_reference.csv"><font color="grey">Step4 -</font> feature_reference.csv</h3>
 <p>Next we will set the correct oligo tag/sequence for “feature_reference.csv” for cellranger-multi to process and quantify the oligo reads properly. Below is an example of feature_reference.csv.</p>
-<div id="cell-37" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="43">
+<div id="cell-37" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="do">## show example feature_reference.csv</span></span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat_content</span>(<span class="st">"/camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/feature_reference.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>id,name,read,pattern,sequence,feature_type
-C0810,CD138,R2,5PNNNNNNNNNN(BC),GCGTTTGTATGTACT,Antibody Capture
-C0917,FAS,R2,5PNNNNNNNNNN(BC),CACATCGTTTGTGTA,Antibody Capture
-C0093,CD19,R2,5PNNNNNNNNNN(BC),ATCAGCCATGTCAGT,Antibody Capture
-C0103,B220,R2,5PNNNNNNNNNN(BC),CCTACACCTCATAAT,Antibody Capture
-C0557,CD38,R2,5PNNNNNNNNNN(BC),CGTATCCGTCTCCTA,Antibody Capture
-C0200,CD86,R2,5PNNNNNNNNNN(BC),CTGGATTTGTGTATC,Antibody Capture
-C0988,FITC,R2,5PNNNNNNNNNN(BC),TTTGTGTTGTGGTAC,Antibody Capture
-C0987,APC,R2,5PNNNNNNNNNN(BC),TTAACCGTCTCCCTT,Antibody Capture
-C0301,Hash1,R2,5PNNNNNNNNNN(BC),ACCCACCAGTAAGAC,Antibody Capture
-C0302,Hash2,R2,5PNNNNNNNNNN(BC),GGTCGAGAGCATTCA,Antibody Capture</code></pre>
+C0301,C0301,R2,5PNNNNNNNNNN(BC),ACCCACCAGTAAGAC,Antibody Capture
+C0302,C0302,R2,5PNNNNNNNNNN(BC),GGTCGAGAGCATTCA,Antibody Capture
+C0303,C0303,R2,5PNNNNNNNNNN(BC),CTTGCCGCATGTCAT,Antibody Capture
+C0304,C0304,R2,5PNNNNNNNNNN(BC),AAAGCATTCTTCACG,Antibody Capture
+C0305,C0305,R2,5PNNNNNNNNNN(BC),CTTTGTCTTTGTGAG,Antibody Capture
+C0306,C0306,R2,5PNNNNNNNNNN(BC),TATGCTGCCACGGTA,Antibody Capture
+C0307,C0307,R2,5PNNNNNNNNNN(BC),GAGTCTGCCAGTATC,Antibody Capture
+C0308,C0308,R2,5PNNNNNNNNNN(BC),TATAGAACGCCAGGC,Antibody Capture
+C0309,C0309,R2,5PNNNNNNNNNN(BC),TGCCTATGAAACAAG,Antibody Capture
+C0310,C0310,R2,5PNNNNNNNNNN(BC),CCGATTGTAACAGAC,Antibody Capture
+C0311,C0311,R2,5PNNNNNNNNNN(BC),GCTTACCGAATTAAC,Antibody Capture
+C0312,C0312,R2,5PNNNNNNNNNN(BC),CTGCAAATATAACGG,Antibody Capture</code></pre>
 </div>
 </div>
 <p>Since CITEseq &amp; cell hashing library was prepared for the sequencing samples, information of the antibody used and their oligo sequence was retrieved from the SRA accession of this study. We will make one feature_reference.csv file for each sequencing sample to avoid mixing up, as the same hashtag oligo was used for different donors in different sequencing runs.</p>
@@ -898,7 +900,7 @@ C0302,Hash2,R2,5PNNNNNNNNNN(BC),GGTCGAGAGCATTCA,Antibody Capture</code></pre>
 └── SraRunTable.txt</code></pre>
 </div>
 </div>
-<div id="cell-40" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="47">
+<div id="cell-40" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="do">## read the downloaded feature reference files</span></span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>cv10_features <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input/GSE247910_ADT_HTO_details_README.txt"</span>, <span class="at">sep =</span> <span class="st">"</span><span class="sc">\t</span><span class="st">"</span>)</span>
 <span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>cv12_features <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input/GSE247912_ADT_HTO_details_README.txt"</span>, <span class="at">sep =</span> <span class="st">"</span><span class="sc">\t</span><span class="st">"</span>)</span>
@@ -1068,7 +1070,7 @@ C0302,Hash2,R2,5PNNNNNNNNNN(BC),GGTCGAGAGCATTCA,Antibody Capture</code></pre>
 </table>
 </div>
 </div>
-<div id="cell-41" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="48">
+<div id="cell-41" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="do">## modify each feature reference</span></span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="fu">c</span>(<span class="st">"cv10_features"</span>, <span class="st">"cv12_features"</span>)){</span>
 <span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    </span>
@@ -1107,7 +1109,7 @@ C0302,Hash2,R2,5PNNNNNNNNNN(BC),GGTCGAGAGCATTCA,Antibody Capture</code></pre>
 [1] FALSE</code></pre>
 </div>
 </div>
-<div id="cell-42" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="71">
+<div id="cell-42" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(cv10_features)</span>
 <span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(cv12_features)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
@@ -1273,16 +1275,16 @@ C0302,Hash2,R2,5PNNNNNNNNNN(BC),GGTCGAGAGCATTCA,Antibody Capture</code></pre>
 </table>
 </div>
 </div>
-<div id="cell-43" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="49">
+<div id="cell-43" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="do">## now output the dataframes as feature_reference.csv</span></span>
 <span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="fu">c</span>(<span class="st">"cv10_features"</span>, <span class="st">"cv12_features"</span>)){</span>
 <span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    sample <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"_.*"</span>, <span class="st">""</span>, x)</span>
 <span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">write.csv</span>(<span class="fu">get</span>(x), <span class="fu">paste0</span>(<span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input/"</span>, <span class="fu">toupper</span>(sample), <span class="st">"_feature_reference.csv"</span>), <span class="at">row.names =</span> F, <span class="at">quote =</span> F)}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="cell-44" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="50">
+<div id="cell-44" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>fs<span class="sc">::</span><span class="fu">dir_tree</span>(<span class="at">path =</span> <span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/input
+<pre><code>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input
 ├── CV10_feature_reference.csv
 ├── CV12_feature_reference.csv
 ├── GSE247910_ADT_HTO_details_README.txt
@@ -1387,7 +1389,7 @@ SRR22473111,/camp/home/hungm/scratch/hungm/anqi/AX_GSE219098/raw_fastq/,any,VDJ-
 </table>
 </div>
 </div>
-<div id="cell-49" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div id="cell-49" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="do">## modify sra metadata</span></span>
 <span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>sra <span class="ot">&lt;-</span> sra <span class="sc">%&gt;%</span></span>
 <span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">feature_types =</span> <span class="fu">case_when</span>(</span>
@@ -1497,7 +1499,7 @@ SRR22473111,/camp/home/hungm/scratch/hungm/anqi/AX_GSE219098/raw_fastq/,any,VDJ-
 </table>
 </div>
 </div>
-<div id="cell-50" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div id="cell-50" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="do">## save dataframe as library.csv</span></span>
 <span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>outputdir <span class="ot">&lt;-</span> <span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input/"</span></span>
 <span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="fu">unique</span>(sra<span class="sc">$</span>id)){</span>
@@ -1506,10 +1508,10 @@ SRR22473111,/camp/home/hungm/scratch/hungm/anqi/AX_GSE219098/raw_fastq/,any,VDJ-
 <span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">select</span>(<span class="sc">!</span>id) <span class="sc">%&gt;%</span></span>
 <span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">write.table</span>(., <span class="fu">paste0</span>(outputdir, x, <span class="st">"_library.csv"</span>), <span class="at">col.names =</span> F, <span class="at">row.names =</span> F, <span class="at">quote =</span> F, <span class="at">sep =</span> <span class="st">","</span>)}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="cell-51" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div id="cell-51" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>fs<span class="sc">::</span><span class="fu">dir_tree</span>(<span class="at">path =</span> <span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input/"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/input/
+<pre><code>/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/input/
 ├── CV10_feature_reference.csv
 ├── CV10_library.csv
 ├── CV12_feature_reference.csv
@@ -1525,10 +1527,10 @@ SRR22473111,/camp/home/hungm/scratch/hungm/anqi/AX_GSE219098/raw_fastq/,any,VDJ-
 <h3 class="unnumbered anchored" data-anchor-id="step6---batch.sh"><font color="grey">Step6 -</font> batch.sh</h3>
 <p>Next we will need to create and modify each individual multi.sh and config.csv file for each sequencing sample, which can be done by running the “batch.sh” script. The script will perform the following :<br>
 &gt; 1. make a subdirectory for each sequencing sample in a pre-defined cellranger log directory. &gt; 2. copy “multi.sh” script into each sequencing sample subdirectory and modify cellranger output directory when multi.sh is ran &gt; 3. copy “config.csv” file into each sequencing sample subdirectory and add “library.csv” and “feature_reference.csv” contents to “config.csv”</p>
-<div id="cell-53" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="13">
+<div id="cell-53" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="16">
 <div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat_content</span>(<span class="st">'/camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/batch.sh'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>export accession=/matthew/MH_GSE247917
+<pre><code>export accession=/matthew/MH_GSE247917/
 
 # setup all scripts in this cellranger log directory
 mkdir -p /camp/home/hungm/scratch/hungm/${accession}/logs/cellranger
@@ -1547,11 +1549,11 @@ do mkdir -p /camp/home/hungm/scratch/hungm/${accession}/logs/cellranger/${id}
    sed -i "12s|.*|export sample=$id|" /camp/home/hungm/scratch/hungm/${accession}/logs/cellranger/${id}/multi.sh
 
    # add library details from _library.csv to config.csv
-   csv1="/camp/home/hungm/scratch/hungm/${accession}/input/${id}_library.csv"
+   csv1="/camp/home/hungm/scratch/hungm/${accession}/logs/input/${id}_library.csv"
    sed -i '38r '"$csv1"'' /camp/home/hungm/scratch/hungm/${accession}/logs/cellranger/${id}/config.csv
 
    # specify feature barcoding path in config.csv
-   replacement="reference,/camp/home/hungm/scratch/hungm/$accession/input/${id}_feature_reference.csv"
+   replacement="reference,/camp/home/hungm/scratch/hungm/$accession/logs/input/${id}_feature_reference.csv"
    sed -i "26s|.*|$replacement|" /camp/home/hungm/scratch/hungm/${accession}/logs/cellranger/${id}/config.csv;
 done &lt; /camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/batch_id.txt
 
@@ -1569,7 +1571,7 @@ done &lt; /camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/batch_id.txt
 #done &lt; /camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/batch_id.txt</code></pre>
 </div>
 </div>
-<div id="cell-54" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="15">
+<div id="cell-54" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="25">
 <div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="do">## execute batch.sh script</span></span>
 <span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system</span>(<span class="st">"source /camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/batch.sh"</span>)</span>
 <span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>fs<span class="sc">::</span><span class="fu">dir_tree</span>(<span class="at">path =</span> <span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/cellranger"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1585,16 +1587,16 @@ done &lt; /camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/batch_id.txt
 └── batch_id.txt</code></pre>
 </div>
 </div>
-<div id="cell-55" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="16">
+<div id="cell-55" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="18">
 <div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat_content</span>(<span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/cellranger/CV12/config.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># This template shows the possible cellranger multi config CSV options for analyzing Single Cell Gene Expression with Feature Barcode Technology (Antibody Capture, CRISPR Guide Capture, Cell Multiplexing, Antigen Capture), Fixed RNA Profiling, or Single Cell Immune Profiling data. 
 # These options cannot be used all together - see section descriptions for detail.
 # Use 'cellranger multi-template --parameters' to see descriptions of all parameters.
-# Please see cellranger multi documentation for details and experimental design-specific examples at https://www.10xgenomics.com/support.
 
 [gene-expression]
-reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-gex-GRCh38-2020-A
+reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-gex-mm10-2020-A
+create-bam,true
 # probe-set,/path/to/probe/set, # Required, Fixed RNA Profiling only. 
 # filter-probes,&lt;true|false&gt;, # Optional, Fixed RNA Profiling only. 
 # r1-length,&lt;int&gt;
@@ -1613,13 +1615,13 @@ reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-gex-GRCh38
 # barcode-sample-assignment,/path/to/barcode-sample-assignment/csv, # Optional, Cell Multiplexing only.
 
 [feature] # For Feature Barcode libraries only
-reference,/camp/home/hungm/scratch/hungm//matthew/MH_GSE247917/input/CV12_feature_reference.csv
+reference,/camp/home/hungm/scratch/hungm//matthew/MH_GSE247917//logs/input/CV12_feature_reference.csv
 # r1-length,&lt;int&gt;
 # r2-length,&lt;int&gt;
 
 [vdj] # For TCR and BCR libraries only
-reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-cellranger-vdj-GRCh38-alts-ensembl-7.1.0
-inner-enrichment-primers,/camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/tcrgd_primers.txt
+reference,/camp/svc/reference/Genomics/10x/10x_transcriptomes/refdata-cellranger-vdj-GRCm38-alts-ensembl-7.0.0
+# inner-enrichment-primers,/camp/home/hungm/nemo-pipelines/scrnaseq/cellranger/tcrgd_primers.txt
 # inner-enrichment-primers,/path/to/primers
 # r1-length,&lt;int&gt;
 # r2-length,&lt;int&gt;
@@ -1665,7 +1667,7 @@ SRR26844888,/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/,any,A
 <section id="step7---multi.sh" class="level3 unnumbered">
 <h3 class="unnumbered anchored" data-anchor-id="step7---multi.sh"><font color="grey">Step7 -</font> multi.sh</h3>
 <p>After confirming that all the files are properly set up, we can run the multi.sh scripts for each sequencing sample.</p>
-<div id="cell-57" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="26">
+<div id="cell-57" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="19">
 <div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat_content</span>(<span class="st">"/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/cellranger/CV12/multi.sh"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>#!/bin/bash
@@ -1678,14 +1680,15 @@ SRR26844888,/camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/raw_fastq/,any,A
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=matthew.hung@crick.ac.uk
 
-export accession=/matthew/MH_GSE247917
+export accession=/matthew/MH_GSE247917/
 export sample=CV12
 mkdir -p /camp/home/hungm/scratch/hungm/${accession}/cellranger
 exec &gt; /camp/home/hungm/scratch/hungm/${accession}/logs/cellranger/${sample}/multi.log 2&gt;&amp;1
 rm -r /camp/home/hungm/scratch/hungm/${accession}/logs/cellranger/slurm*
 
 cd /camp/home/hungm/scratch/hungm/${accession}/cellranger
-module load CellRanger/7.1.0
+#module load CellRanger/7.1.0
+module load CellRanger/8.0.0
 cellranger multi --id=${sample} \
          --csv=/camp/home/hungm/scratch/hungm/${accession}/logs/cellranger/${sample}/config.csv \
                  --localmem=200 \
@@ -1693,7 +1696,7 @@ cellranger multi --id=${sample} \
 </code></pre>
 </div>
 </div>
-<div id="cell-58" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="28">
+<div id="cell-58" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="27">
 <div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">system</span>(<span class="st">"cd /camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/cellranger/; sbatch CV10/multi.sh"</span>)</span>
 <span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system</span>(<span class="st">"cd /camp/home/hungm/scratch/hungm/matthew/MH_GSE247917/logs/cellranger/; sbatch CV12/multi.sh"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>

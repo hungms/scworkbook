@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Matthew Hung">
-<meta name="dcterms.date" content="2024-08-27">
+<meta name="dcterms.date" content="2024-11-07">
 
 <title>Single-Cell Workbook - 7&nbsp; RNA Contamination</title>
 <style>
@@ -59,15 +59,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../../site_libs/quarto-nav/headroom.min.js"></script>
 <script src="../../site_libs/clipboard/clipboard.min.js"></script>
 <script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
 <script src="../../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../../">
-<link href="../../sections/1_processing/1.6_qc.html" rel="next">
-<link href="../../sections/1_processing/1.4_doublets.html" rel="prev">
+<link href="../../sections/1_processing/1.6_doublets.html" rel="next">
+<link href="../../sections/1_processing/1.4_qualitycontrol.html" rel="prev">
 <script src="../../site_libs/quarto-html/quarto.js"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -104,6 +104,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 
 
 </head>
@@ -219,8 +222,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../sections/1_processing/1.4_doublets.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Doublet Detection</span></span></a>
+  <a href="../../sections/1_processing/1.4_qualitycontrol.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Quality Control</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -231,8 +234,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../sections/1_processing/1.6_qc.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Quality Control</span></span></a>
+  <a href="../../sections/1_processing/1.6_doublets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Doublet Detection</span></span></a>
   </div>
 </li>
       </ul>
@@ -266,7 +269,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#motivation" id="toc-motivation" class="nav-link active" data-scroll-target="#motivation">Motivation</a></li>
-  <li><a href="#sec-calculate_gene_fractions" id="toc-sec-calculate_gene_fractions" class="nav-link" data-scroll-target="#sec-calculate_gene_fractions"><span class="header-section-number">7.1</span> Calculate Gene Fractions</a></li>
+  <li><a href="#quick-processing" id="toc-quick-processing" class="nav-link" data-scroll-target="#quick-processing"><span class="header-section-number">7.1</span> Quick Processing</a></li>
   </ul>
 </nav>
     </div>
@@ -292,7 +295,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">2024-08-27</p>
+      <p class="date">2024-11-07</p>
     </div>
   </div>
   
@@ -306,66 +309,784 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="motivation" class="level2 unnumbered">
 <h2 class="unnumbered anchored" data-anchor-id="motivation">Motivation</h2>
-<div id="cell-2" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="2">
+<div id="cell-2" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="30">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="do">## set up environment</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressMessages</span>({</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"/camp/home/hungm/working/Matthew/library/R/functions/Seurat/processing.R"</span>)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"/camp/home/hungm/working/Matthew/library/R/functions/Seurat/plotting.R"</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">setwd</span>(<span class="st">"/nemo/lab/caladod/working/Matthew/project/matthew/MH_GSE155224"</span>)})</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scUnify)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(clustree)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">setwd</span>(<span class="st">"/nemo/lab/caladod/working/Matthew/project/matthew/MH_GSE247917"</span>)})</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="do">## import seurat objects</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">"seurat/20240826_GSE155224_doublets.qs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">"seurat/1_processing/1.4_GSE247917_qc.qs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-3" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>obj.list <span class="ot">&lt;-</span> <span class="fu">SplitObject</span>(obj, <span class="at">split.by =</span> <span class="st">"samples"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-4" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="do">## store a list of 10x output directories as a vector &amp; define sample names</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>dir <span class="ot">&lt;-</span> <span class="st">"/nemo/lab/caladod/scratch/hungm/matthew/MH_GSE247917/cellranger/"</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>samples <span class="ot">=</span> <span class="fu">list.files</span>(dir)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>dir.list <span class="ot">&lt;-</span> <span class="fu">paste0</span>(dir, samples, <span class="st">"/outs/per_sample_outs/"</span>, samples, <span class="st">"/count/sample_filtered_feature_bc_matrix/"</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>dir.list</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<style>
+.list-inline {list-style: none; margin:0; padding: 0}
+.list-inline>li {display: inline-block}
+.list-inline>li:not(:last-child)::after {content: "\00b7"; padding: 0 .5ex}
+</style>
+<ol class="list-inline"><li>'/nemo/lab/caladod/scratch/hungm/matthew/MH_GSE247917/cellranger/CV10/outs/per_sample_outs/CV10/count/sample_filtered_feature_bc_matrix/'</li><li>'/nemo/lab/caladod/scratch/hungm/matthew/MH_GSE247917/cellranger/CV12/outs/per_sample_outs/CV12/count/sample_filtered_feature_bc_matrix/'</li></ol>
+</div>
+</div>
+<div id="cell-5" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="fu">seq_along</span>(obj.list)){</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    obj.list[[i]] <span class="ot">&lt;-</span> <span class="fu">run_decontx</span>(<span class="at">x =</span> obj.list[[i]], <span class="at">raw.dir =</span> dir.list[i], <span class="at">cluster =</span> <span class="st">"integrated_snn_res.0.2"</span>)}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>10X data contains more than one type and is being returned as a list containing matrices of each type.
+
+--------------------------------------------------
+
+Starting DecontX
+
+--------------------------------------------------
+
+Thu Nov  7 00:30:29 2024 .. Analyzing all cells
+
+Thu Nov  7 00:30:29 2024 .... Generating UMAP
+
+Found more than one class "dist" in cache; using the first, from namespace 'BiocGenerics'
+
+Also defined by ‘spam’
+
+Found more than one class "dist" in cache; using the first, from namespace 'BiocGenerics'
+
+Also defined by ‘spam’
+
+Found more than one class "dist" in cache; using the first, from namespace 'BiocGenerics'
+
+Also defined by ‘spam’
+
+Thu Nov  7 00:31:02 2024 .... Estimating contamination
+
+Thu Nov  7 00:31:06 2024 ...... Completed iteration: 10 | converge: 0.004858
+
+Thu Nov  7 00:31:09 2024 ...... Completed iteration: 20 | converge: 0.001528
+
+Thu Nov  7 00:31:10 2024 ...... Completed iteration: 24 | converge: 0.0009542
+
+Thu Nov  7 00:31:10 2024 .. Calculating final decontaminated matrix
+
+--------------------------------------------------
+
+Completed DecontX. Total time: 45.52019 secs
+
+--------------------------------------------------
+
+10X data contains more than one type and is being returned as a list containing matrices of each type.
+
+--------------------------------------------------
+
+Starting DecontX
+
+--------------------------------------------------
+
+Thu Nov  7 00:31:19 2024 .. Analyzing all cells
+
+Thu Nov  7 00:31:19 2024 .... Generating UMAP
+
+Found more than one class "dist" in cache; using the first, from namespace 'BiocGenerics'
+
+Also defined by ‘spam’
+
+Found more than one class "dist" in cache; using the first, from namespace 'BiocGenerics'
+
+Also defined by ‘spam’
+
+Found more than one class "dist" in cache; using the first, from namespace 'BiocGenerics'
+
+Also defined by ‘spam’
+
+Thu Nov  7 00:31:49 2024 .... Estimating contamination
+
+Thu Nov  7 00:31:50 2024 ...... Completed iteration: 10 | converge: 0.04286
+
+Thu Nov  7 00:31:51 2024 ...... Completed iteration: 20 | converge: 0.01919
+
+Thu Nov  7 00:31:52 2024 ...... Completed iteration: 30 | converge: 0.01192
+
+Thu Nov  7 00:31:52 2024 ...... Completed iteration: 40 | converge: 0.009142
+
+Thu Nov  7 00:31:53 2024 ...... Completed iteration: 50 | converge: 0.006919
+
+Thu Nov  7 00:31:54 2024 ...... Completed iteration: 60 | converge: 0.006951
+
+Thu Nov  7 00:31:55 2024 ...... Completed iteration: 70 | converge: 0.006243
+
+Thu Nov  7 00:31:56 2024 ...... Completed iteration: 80 | converge: 0.005062
+
+Thu Nov  7 00:31:56 2024 ...... Completed iteration: 90 | converge: 0.003995
+
+Thu Nov  7 00:31:57 2024 ...... Completed iteration: 100 | converge: 0.003164
+
+Thu Nov  7 00:31:58 2024 ...... Completed iteration: 110 | converge: 0.002441
+
+Thu Nov  7 00:31:59 2024 ...... Completed iteration: 120 | converge: 0.001857
+
+Thu Nov  7 00:31:59 2024 ...... Completed iteration: 130 | converge: 0.001405
+
+Thu Nov  7 00:32:00 2024 ...... Completed iteration: 140 | converge: 0.001063
+
+Thu Nov  7 00:32:00 2024 ...... Completed iteration: 143 | converge: 0.0009736
+
+Thu Nov  7 00:32:00 2024 .. Calculating final decontaminated matrix
+
+--------------------------------------------------
+
+Completed DecontX. Total time: 42.94879 secs
+
+--------------------------------------------------
+</code></pre>
+</div>
+</div>
+<div id="cell-6" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>obj.list[[<span class="dv">1</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>An object of class Seurat 
+84349 features across 19484 samples within 8 assays 
+Active assay: integrated (14868 features, 2000 variable features)
+ 2 layers present: data, scale.data
+ 7 other assays present: RNA, HTO, ADT, BCR, TCR, SCT, DX
+ 2 dimensional reductions calculated: pca, umap</code></pre>
+</div>
+</div>
+<div id="cell-7" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(obj.list[[<span class="dv">1</span>]]<span class="sc">@</span>meta.data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true">
+<caption>A data.frame: 6 × 46</caption>
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th" scope="col">orig.ident</th>
+<th data-quarto-table-cell-role="th" scope="col">nCount_RNA</th>
+<th data-quarto-table-cell-role="th" scope="col">nFeature_RNA</th>
+<th data-quarto-table-cell-role="th" scope="col">nCount_HTO</th>
+<th data-quarto-table-cell-role="th" scope="col">nFeature_HTO</th>
+<th data-quarto-table-cell-role="th" scope="col">nCount_ADT</th>
+<th data-quarto-table-cell-role="th" scope="col">nFeature_ADT</th>
+<th data-quarto-table-cell-role="th" scope="col">samples</th>
+<th data-quarto-table-cell-role="th" scope="col">pct.mt</th>
+<th data-quarto-table-cell-role="th" scope="col">pct.rb</th>
+<th data-quarto-table-cell-role="th" scope="col">⋯</th>
+<th data-quarto-table-cell-role="th" scope="col">integrated_snn_res.0.5</th>
+<th data-quarto-table-cell-role="th" scope="col">integrated_snn_res.0.6</th>
+<th data-quarto-table-cell-role="th" scope="col">integrated_snn_res.0.7</th>
+<th data-quarto-table-cell-role="th" scope="col">integrated_snn_res.0.8</th>
+<th data-quarto-table-cell-role="th" scope="col">integrated_snn_res.0.9</th>
+<th data-quarto-table-cell-role="th" scope="col">integrated_snn_res.1</th>
+<th data-quarto-table-cell-role="th" scope="col">seurat_clusters</th>
+<th data-quarto-table-cell-role="th" scope="col">sc.decontx</th>
+<th data-quarto-table-cell-role="th" scope="col">nCount_DX</th>
+<th data-quarto-table-cell-role="th" scope="col">nFeature_DX</th>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;dbl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;int&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;dbl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;int&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;dbl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;int&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;dbl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;dbl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">⋯</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;fct&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;fct&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;fct&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;fct&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;fct&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;fct&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;fct&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;dbl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;dbl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;int&gt;</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGAAGCCCA-1</td>
+<td>SeuratProject</td>
+<td>2075</td>
+<td>1226</td>
+<td>91</td>
+<td>3</td>
+<td>1336</td>
+<td>58</td>
+<td>CV10</td>
+<td>2.602410</td>
+<td>11.036145</td>
+<td>⋯</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>6</td>
+<td>9</td>
+<td>10</td>
+<td>10</td>
+<td>0.0002442453</td>
+<td>2074.524</td>
+<td>1226</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGAGGGATA-1</td>
+<td>SeuratProject</td>
+<td>4110</td>
+<td>2205</td>
+<td>257</td>
+<td>3</td>
+<td>1008</td>
+<td>57</td>
+<td>CV10</td>
+<td>4.452555</td>
+<td>7.542579</td>
+<td>⋯</td>
+<td>2</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0.0029265071</td>
+<td>4099.602</td>
+<td>2205</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGAGTGACC-1</td>
+<td>SeuratProject</td>
+<td>1216</td>
+<td>785</td>
+<td>88</td>
+<td>2</td>
+<td>829</td>
+<td>57</td>
+<td>CV10</td>
+<td>3.207237</td>
+<td>18.256579</td>
+<td>⋯</td>
+<td>4</td>
+<td>3</td>
+<td>4</td>
+<td>1</td>
+<td>4</td>
+<td>5</td>
+<td>5</td>
+<td>0.0030700745</td>
+<td>1212.775</td>
+<td>785</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGATATGGT-1</td>
+<td>SeuratProject</td>
+<td>6005</td>
+<td>2865</td>
+<td>599</td>
+<td>4</td>
+<td>3661</td>
+<td>57</td>
+<td>CV10</td>
+<td>5.711907</td>
+<td>5.911740</td>
+<td>⋯</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>6</td>
+<td>9</td>
+<td>10</td>
+<td>10</td>
+<td>0.0168573392</td>
+<td>5907.521</td>
+<td>2865</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGCCAGTAG-1</td>
+<td>SeuratProject</td>
+<td>1318</td>
+<td>774</td>
+<td>70</td>
+<td>3</td>
+<td>1216</td>
+<td>58</td>
+<td>CV10</td>
+<td>3.490137</td>
+<td>23.216995</td>
+<td>⋯</td>
+<td>4</td>
+<td>2</td>
+<td>4</td>
+<td>1</td>
+<td>5</td>
+<td>5</td>
+<td>5</td>
+<td>0.0010559878</td>
+<td>1316.788</td>
+<td>774</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGCGATATA-1</td>
+<td>SeuratProject</td>
+<td>1739</td>
+<td>1131</td>
+<td>84</td>
+<td>4</td>
+<td>700</td>
+<td>57</td>
+<td>CV10</td>
+<td>4.025302</td>
+<td>6.382979</td>
+<td>⋯</td>
+<td>2</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0.0022682403</td>
+<td>1735.578</td>
+<td>1131</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="cell-8" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">merge</span>(obj.list[[<span class="dv">1</span>]], obj.list[<span class="dv">2</span><span class="sc">:</span><span class="fu">length</span>(obj.list)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="sec-calculate_gene_fractions" class="level2" data-number="7.1">
-<h2 data-number="7.1" class="anchored" data-anchor-id="sec-calculate_gene_fractions"><span class="header-section-number">7.1</span> Calculate Gene Fractions</h2>
-<p>The function below will perform the calculations of key quality control parameters for every cell but will not filter any cells yet. This is done by calculating the no. of selected reads over the no. of total reads for every cell.</p>
-<div id="cell-4" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># run calculate gene fractions if haven't done so already</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">calculate_fractions</span>(obj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="quick-processing" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="quick-processing"><span class="header-section-number">7.1</span> Quick Processing</h2>
+<div id="cell-10" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">join_layers</span>(obj)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">join_layers</span>(obj, <span class="at">assay =</span> <span class="st">"DX"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="cell-5" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>obj_list <span class="ot">&lt;-</span> <span class="fu">SplitObject</span>(obj, <span class="at">split.by =</span> <span class="st">"samples"</span>)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>obj_list</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<pre><code>$filtered_matrix_1
-An object of class Seurat 
-17895 features across 7502 samples within 3 assays 
-Active assay: RNA (17697 features, 2000 variable features)
- 3 layers present: scale.data, data, counts
- 2 other assays present: HTO, ADT
- 3 dimensional reductions calculated: pca, harmony, umap
+<div id="cell-11" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">integrate_v4</span>(obj, <span class="at">split.by =</span> <span class="st">"samples"</span>, <span class="at">assay =</span> <span class="st">"DX"</span>, <span class="at">nfeatures =</span> <span class="dv">2000</span>, <span class="at">method =</span> <span class="st">"rpca"</span>, <span class="at">k.weight =</span> <span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Running SCTransform on assay: DX
 
-$filtered_matrix_2
-An object of class Seurat 
-17895 features across 8227 samples within 3 assays 
-Active assay: RNA (17697 features, 2000 variable features)
- 3 layers present: scale.data, data, counts
- 2 other assays present: HTO, ADT
- 3 dimensional reductions calculated: pca, harmony, umap</code></pre>
+Running SCTransform on layer: counts
+
+vst.flavor='v2' set. Using model with fixed slope and excluding poisson genes.
+
+Variance stabilizing transformation of count matrix of size 21859 by 19484
+
+Model formula is y ~ log_umi
+
+Get Negative Binomial regression parameters per gene
+
+Using 2000 genes, 5000 cells
+
+Found 135 outliers - those will be ignored in fitting/regularization step
+
+
+Second step: Get residuals using fitted parameters for 21859 genes
+
+Computing corrected count matrix for 21859 genes
+
+Calculating gene attributes
+
+Wall clock passed: Time difference of 1.210969 mins
+
+Determine variable features
+
+Centering data matrix
+
+Getting residuals for block 1(of 4) for counts dataset
+
+Getting residuals for block 2(of 4) for counts dataset
+
+Getting residuals for block 3(of 4) for counts dataset
+
+Getting residuals for block 4(of 4) for counts dataset
+
+Centering data matrix
+
+Finished calculating residuals for counts
+
+Warning message:
+“Different cells and/or features from existing assay SCT”
+Set default assay to SCT
+
+Running SCTransform on assay: DX
+
+Running SCTransform on layer: counts
+
+vst.flavor='v2' set. Using model with fixed slope and excluding poisson genes.
+
+Variance stabilizing transformation of count matrix of size 14243 by 17366
+
+Model formula is y ~ log_umi
+
+Get Negative Binomial regression parameters per gene
+
+Using 1118 genes, 5000 cells
+
+There are 76 estimated thetas smaller than 1e-07 - will be set to 1e-07
+
+Found 2 outliers - those will be ignored in fitting/regularization step
+
+
+Second step: Get residuals using fitted parameters for 14243 genes
+
+Computing corrected count matrix for 14243 genes
+
+Calculating gene attributes
+
+Wall clock passed: Time difference of 42.74564 secs
+
+Determine variable features
+
+Centering data matrix
+
+Getting residuals for block 1(of 4) for counts dataset
+
+Getting residuals for block 2(of 4) for counts dataset
+
+Getting residuals for block 3(of 4) for counts dataset
+
+Getting residuals for block 4(of 4) for counts dataset
+
+Centering data matrix
+
+Finished calculating residuals for counts
+
+Warning message:
+“Different cells and/or features from existing assay SCT”
+Set default assay to SCT
+
+Computing within dataset neighborhoods
+
+Finding all pairwise anchors
+
+Projecting new data onto SVD
+
+Projecting new data onto SVD
+
+Finding neighborhoods
+
+Finding anchors
+
+    Found 177 anchors
+
+sct.model: counts on 2000 cells: CV10_AAACCTGAGAAGCCCA-1 .. CV10_ACTATCTGTAGCGTAG-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+sct.model: counts on 2000 cells: CV10_ACTATCTGTATATGAG-1 .. CV10_ATGTGTGGTATTCTCT-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+sct.model: counts on 2000 cells: CV10_ATGTGTGGTCGACTAT-1 .. CV10_CATTATCAGGTCATCT-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+sct.model: counts on 2000 cells: CV10_CATTATCAGTACGATA-1 .. CV10_CGGAGTCTCTCTTGAT-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+sct.model: counts on 2000 cells: CV10_CGGAGTCTCTTAGCCC-1 .. CV10_CTTAACTTCGAATGGG-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+sct.model: counts on 2000 cells: CV10_CTTAACTTCGCCATAA-1 .. CV10_GCCTCTACAATCAGAA-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+sct.model: counts on 2000 cells: CV10_GCCTCTACACAGCCCA-1 .. CV10_GTACGTATCTGGTATG-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+sct.model: counts on 2000 cells: CV10_GTACTCCAGACTCGGA-1 .. CV10_TATCAGGTCTTGCATT-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+sct.model: counts on 2000 cells: CV10_TATCAGGTCTTGGGTA-1 .. CV10_TGGACGCAGCCCAATT-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+sct.model: counts on 1484 cells: CV10_TGGACGCAGCGACGTA-1 .. CV10_TTTGTCATCTTTAGGG-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+Warning message:
+“Different cells and/or features from existing assay SCT”
+sct.model: counts on 2000 cells: CV12_AAACCTGAGAGCCTAG-1 .. CV12_ACTTACTGTTTACTCT-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+sct.model: counts on 2000 cells: CV12_ACTTACTTCAATCACG-1 .. CV12_CAAGATCCAAGCTGTT-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+sct.model: counts on 2000 cells: CV12_CAAGATCCAATGAAAC-1 .. CV12_CCTAAAGGTGGAAAGA-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+sct.model: counts on 2000 cells: CV12_CCTAAAGGTGTCAATC-1 .. CV12_CTCACACAGGTACTCT-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+sct.model: counts on 2000 cells: CV12_CTCACACAGTGGGCTA-1 .. CV12_GATCGTATCACGGTTA-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+sct.model: counts on 2000 cells: CV12_GATCGTATCATACGGT-1 .. CV12_GGGATGACAGCTATTG-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+sct.model: counts on 2000 cells: CV12_GGGATGACAGCTCGCA-1 .. CV12_TACTTGTGTCGGCTCA-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+sct.model: counts on 2000 cells: CV12_TACTTGTGTCTCTTAT-1 .. CV12_TGCTGCTTCGCCCTTA-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+sct.model: counts on 1366 cells: CV12_TGCTGCTTCGGCGCTA-1 .. CV12_TTTGTCATCTGCCCTA-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12189 genes
+
+Warning message:
+“Different cells and/or features from existing assay SCT”
+Merging dataset 2 into 1
+
+Extracting anchors for merged samples
+
+Finding integration vectors
+
+Finding integration vector weights
+
+Integrating data
+
+Warning message:
+“Assay integrated changing from SCTAssay to Assay”
+Warning message:
+“Different cells and/or features from existing assay integrated”
+Warning message in asMethod(object):
+“sparse-&gt;dense coercion: allocating vector of size 3.9 GiB”
+Warning message:
+“Assay integrated changing from Assay to SCTAssay”
+Warning message:
+“Different cells and/or features from existing assay SCT”</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+[1] 1
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+[1] 2</code></pre>
 </div>
 </div>
-<div id="cell-6" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(x <span class="cf">in</span> <span class="fu">seq_along</span>(obj_list)){</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    obj_list[[x]] <span class="ot">&lt;-</span> <span class="fu">run_decontx</span>(obj_list[[x]], <span class="at">raw.dir =</span> dir[x], <span class="at">cluster =</span> <span class="st">"seurat_clusters"</span>)}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-12" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="26">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">5</span>, <span class="at">repr.plot.height=</span><span class="dv">4</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">RunPCA</span>(obj)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ElbowPlot</span>(obj, <span class="at">ndims =</span> <span class="dv">30</span>, <span class="at">reduction =</span> <span class="st">"pca"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>PC_ 1 
+Positive:  SEPTIN5, ERBB2, IL7R, TBK1, GNLY, AL050309.1, RORA, LEF1, PLEKHB2, RNF135 
+       TGFBR3, CCL5, PDE3B, NELL2, KAT5, CD5, HIVEP2, TWF2, NKG7, NCAPD2 
+       CD8A, ADAM9, NADK, ITK, GZMK, C16orf72, ZMIZ2, HIRIP3, G6PD, LTB 
+Negative:  ZNF385D, CDK6, MED12L, ATP8B4, GUCY1B1, TUBB1, SOX4, DEPTOR, MMRN1, IL1B 
+       ZNF804A, CD74, TAFA2, TCF4, ANKRD28, NFE2, PYGL, PRSS57, MPP1, H1F0 
+       STON2, STMN1, HMOX1, EREG, LRMDA, KDM5B, G0S2, CFAP54, FTH1, SLC8A1 
+PC_ 2 
+Positive:  ZNF385D, GNLY, PRF1, NKG7, IL7R, CTSW, CD247, MALAT1, CCL5, LEF1 
+       INPP4B, HIST1H1E, CD69, IL2RB, GZMB, NELL2, KLRK1, ITK, THEMIS, FGFBP2 
+       SYNE2, TESPA1, RPS12, SPOCK2, CST7, ZAP70, STAT4, LTB, SYNE1, MYOM2 
+Negative:  LYZ, S100A9, FOS, VCAN, IFI30, PSAP, S100A8, FTL, CD74, FTH1 
+       FCN1, CST3, NAMPT, SAT1, CTSS, SERPINA1, MNDA, TNFAIP2, CYBB, NEAT1 
+       CD36, AIF1, PLAUR, DMXL2, SPI1, TYMP, LRMDA, TYROBP, SLC8A1, PLXDC2 
+PC_ 3 
+Positive:  GNLY, NKG7, PRF1, CTSW, CX3CR1, FGFBP2, GZMB, FCGR3A, MYOM2, SPON2 
+       CCL5, ZNF385D, CD247, IL2RB, CST7, KLRF1, GZMA, GZMH, ADGRG1, TGFBR3 
+       SH2D1B, PRSS23, SYNE1, C1orf21, AOAH, NCAM1, S1PR5, FLNA, GK5, ITGAM 
+Negative:  CD74, MS4A1, BANK1, AFF3, RALGPS2, LINC00926, HLA-DRA, HLA-DQA1, FCRLA, PAX5 
+       HLA-DQB1, EBF1, NIBAN3, ADAM28, HLA-DRB1, RUBCNL, HLA-DPB1, CDK14, HLA-DPA1, SWAP70 
+       COBLL1, P2RX5, BLNK, COL19A1, BACH2, AC120193.1, WDFY4, OSBPL10, CD79B, CD22 
+PC_ 4 
+Positive:  IL7R, LEF1, INPP4B, NELL2, TPT1, AL138963.4, RPS12, THEMIS, RCAN3, CD5 
+       PDE3B, SERINC5, TSHZ2, RPL13, TRAT1, MAML2, RPLP1, RPL10, TESPA1, IL6ST 
+       CD28, SELL, DGKA, PIK3IP1, FHIT, S100A9, OXNAD1, TRABD2A, AQP3, RPLP0 
+Negative:  CD74, GNLY, NKG7, PRF1, MS4A1, BANK1, GZMB, CX3CR1, FCGR3A, FGFBP2 
+       MYOM2, SPON2, CTSW, AFF3, RALGPS2, CST7, HLA-DRA, CCL5, KLRF1, IL2RB 
+       HLA-DQA1, LINC00926, GZMH, SH2D1B, ADGRG1, HLA-DPB1, HLA-DPA1, GZMA, PRSS23, MCTP2 
+PC_ 5 
+Positive:  TCF7L2, FCGR3A, MS4A7, PSAP, SERPINA1, PECAM1, CSF1R, LST1, WARS, LILRB2 
+       SIGLEC10, IFITM3, MTSS1, AIF1, HMOX1, IFI30, FTH1, LRRC25, FTL, CST3 
+       LILRA1, LILRB1, CD68, FCER1G, ADGRE2, HCK, CFD, LINC02432, RHOC, PILRA 
+Negative:  S100A9, VCAN, S100A8, LYZ, FOS, S100A12, THBS1, CD36, PLAUR, VCAN-AS1 
+       ARHGAP26, ACSL1, PLCB1, CSF3R, MS4A1, CD14, BANK1, NAIP, JUN, NCF1 
+       AC020656.1, DYSF, SLC2A3, IER3, TREM1, ARHGAP24, PLBD1, PTPRE, IER2, AC007952.4 
+</code></pre>
 </div>
-<div id="cell-7" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>run_decontx <span class="ot">&lt;-</span> <span class="cf">function</span>(x, raw.dir, <span class="at">cluster =</span> <span class="cn">NULL</span>, <span class="at">assay =</span> <span class="st">"RNA"</span>, <span class="at">feature.type =</span> <span class="st">"Gene Expression"</span>){</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    toc <span class="ot">&lt;-</span> x[[assay]]<span class="sc">$</span>counts</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    tod <span class="ot">&lt;-</span> <span class="fu">Read10X</span>(raw.dir)[[feature.type]]</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    output <span class="ot">&lt;-</span> <span class="fu">decontX</span>(toc, <span class="at">background =</span> tod, <span class="at">z =</span> cluster, <span class="at">delta =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">10</span>), <span class="at">estimateDelta =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="do">## add contamination score</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    score <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">sc.decontx =</span> output<span class="sc">$</span>contamination)</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rownames</span>(score) <span class="ot">&lt;-</span> <span class="fu">colnames</span>(output<span class="sc">$</span>decontXcounts)</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> <span class="fu">AddMetaData</span>(x, score)</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="do">## add decontaminated counts</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    rna.clean <span class="ot">&lt;-</span> <span class="fu">as</span>(output<span class="sc">$</span>decontXcounts[,<span class="fu">colnames</span>(x)], <span class="st">"sparseMatrix"</span>)</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    x[[<span class="st">"DX"</span>]] <span class="ot">&lt;-</span> <span class="fu">CreateAssay5Object</span>(<span class="at">counts =</span> rna.clean, <span class="at">min.cells =</span> <span class="dv">0</span>, <span class="at">min.features =</span> <span class="dv">0</span>)</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(x)</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    }</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1.5_decont_files/figure-html/cell-11-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-13" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="36">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">RunUMAP</span>(obj, <span class="at">dims =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="at">reduction =</span> <span class="st">"pca"</span>, <span class="at">reduction.name =</span> <span class="st">"umap"</span>, <span class="at">assay =</span> <span class="st">"RNA"</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Found more than one class "dist" in cache; using the first, from namespace 'BiocGenerics'
+
+Also defined by ‘spam’
+
+Found more than one class "dist" in cache; using the first, from namespace 'BiocGenerics'
+
+Also defined by ‘spam’
+</code></pre>
+</div>
+</div>
+<div id="cell-14" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="37">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">20</span>, <span class="at">repr.plot.height=</span><span class="dv">5</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="fu">scUMAP</span>(obj, <span class="at">reduction =</span> <span class="st">"umap"</span>, <span class="at">group.by =</span> <span class="st">"samples"</span>, <span class="at">count =</span> T)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> <span class="fu">scUMAP</span>(obj, <span class="at">reduction =</span> <span class="st">"umap"</span>, <span class="at">group.by =</span> <span class="st">"softqc"</span>, <span class="at">count =</span> T)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>p3 <span class="ot">&lt;-</span> <span class="fu">scUMAP</span>(obj, <span class="at">reduction =</span> <span class="st">"umap"</span>, <span class="at">group.by =</span> <span class="st">"MULTI.global"</span>, <span class="at">count =</span> T)</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>p4 <span class="ot">&lt;-</span> <span class="fu">scUMAP</span>(obj, <span class="at">reduction =</span> <span class="st">"umap"</span>, <span class="at">group.by =</span> <span class="st">"finalqc"</span>, <span class="at">count =</span> T)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_grid</span>(p1, p2, p3, p4, <span class="at">ncol =</span> <span class="dv">4</span>, <span class="at">align =</span> <span class="st">"hv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1.5_decont_files/figure-html/cell-13-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-15" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="38">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">FindNeighbors</span>(obj, <span class="at">reduction =</span> <span class="st">"pca"</span>, <span class="at">dims =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="at">verbose =</span> F)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">FindClusters</span>(obj, <span class="at">resolution =</span> <span class="fu">seq</span>(<span class="fl">0.1</span>, <span class="dv">1</span>, <span class="fl">0.1</span>), <span class="at">algorithm =</span> <span class="dv">1</span>, <span class="at">verbose =</span> F)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>clustree <span class="ot">&lt;-</span> <span class="fu">clustree</span>(obj<span class="sc">@</span>meta.data, <span class="at">prefix =</span> <span class="fu">paste0</span>(<span class="st">"integrated_snn_res."</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-16" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="39">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">15</span>, <span class="at">repr.plot.height=</span><span class="dv">10</span>)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(clustree)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1.5_decont_files/figure-html/cell-15-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-17" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="40">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>obj</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>An object of class Seurat 
+60789 features across 36850 samples within 7 assays 
+Active assay: integrated (14868 features, 2000 variable features)
+ 2 layers present: data, scale.data
+ 6 other assays present: RNA, HTO, ADT, BCR, TCR, SCT
+ 2 dimensional reductions calculated: pca, umap</code></pre>
+</div>
+</div>
+<div id="cell-18" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="41">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">6</span>, <span class="at">repr.plot.height=</span><span class="dv">4</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">scUMAP</span>(obj, <span class="at">reduction =</span> <span class="st">"umap"</span>, <span class="at">group.by =</span> <span class="st">"integrated_snn_res.0.2"</span>, <span class="at">count =</span> T, <span class="at">pt.size =</span> <span class="fl">1.2</span>, <span class="at">cols =</span> palette_list[[<span class="st">"vega_10"</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Scale for colour is already present.
+Adding another scale for colour, which will replace the existing scale.
+Scale for colour is already present.
+Adding another scale for colour, which will replace the existing scale.</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1.5_decont_files/figure-html/cell-17-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-22" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="42">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qsave</span>(obj, <span class="st">"seurat/1_processing/1.5_GSE247917_decont.qs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-24" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>run_decontx <span class="ot">&lt;-</span> <span class="cf">function</span>(x, raw.dir, <span class="at">cluster =</span> <span class="cn">NULL</span>, <span class="at">assay =</span> <span class="st">"RNA"</span>){</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    toc <span class="ot">&lt;-</span> x[[assay]]<span class="sc">$</span>counts</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    tod <span class="ot">&lt;-</span> <span class="fu">Read10X</span>(raw.dir)[[<span class="st">"Gene Expression"</span>]]</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">colnames</span>(tod) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="fu">gsub</span>(<span class="st">"_.*"</span>, <span class="st">""</span>, <span class="fu">colnames</span>(toc)[<span class="dv">1</span>]), <span class="st">"_"</span>, <span class="fu">colnames</span>(tod))</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    tod <span class="ot">&lt;-</span> tod[<span class="fu">rownames</span>(toc), <span class="fu">which</span>(<span class="sc">!</span><span class="fu">colnames</span>(tod) <span class="sc">%in%</span> <span class="fu">colnames</span>(toc))]</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    output <span class="ot">&lt;-</span> celda<span class="sc">::</span><span class="fu">decontX</span>(toc, <span class="at">background =</span> tod, <span class="at">z =</span> cluster)</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="do">## add contamination score</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    score <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">sc.decontx =</span> output<span class="sc">$</span>contamination)</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rownames</span>(score) <span class="ot">&lt;-</span> <span class="fu">colnames</span>(output<span class="sc">$</span>decontXcounts)</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> <span class="fu">AddMetaData</span>(x, score)</span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>    <span class="do">## add decontaminated counts</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>    rna.clean <span class="ot">&lt;-</span> <span class="fu">as</span>(output<span class="sc">$</span>decontXcounts[,<span class="fu">colnames</span>(x)], <span class="st">"sparseMatrix"</span>)</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>    x[[<span class="st">"DX"</span>]] <span class="ot">&lt;-</span> <span class="fu">CreateAssay5Object</span>(<span class="at">counts =</span> rna.clean, <span class="at">min.cells =</span> <span class="dv">0</span>, <span class="at">min.features =</span> <span class="dv">0</span>)</span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(x)</span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>    }</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 
@@ -812,13 +1533,13 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../../sections/1_processing/1.4_doublets.html" class="pagination-link  aria-label=" &lt;span="" detection&lt;="" span&gt;"="">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Doublet Detection</span></span>
+      <a href="../../sections/1_processing/1.4_qualitycontrol.html" class="pagination-link  aria-label=" &lt;span="" control&lt;="" span&gt;"="">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Quality Control</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../../sections/1_processing/1.6_qc.html" class="pagination-link" aria-label="<span class='chapter-number'>8</span>&nbsp; <span class='chapter-title'>Quality Control</span>">
-        <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Quality Control</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../../sections/1_processing/1.6_doublets.html" class="pagination-link" aria-label="<span class='chapter-number'>8</span>&nbsp; <span class='chapter-title'>Doublet Detection</span>">
+        <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Doublet Detection</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

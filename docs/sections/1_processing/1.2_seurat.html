@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Matthew Hung">
-<meta name="dcterms.date" content="2024-10-24">
+<meta name="dcterms.date" content="2024-11-06">
 
 <title>Single-Cell Workbook - 4&nbsp; Seurat Object</title>
 <style>
@@ -222,8 +222,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../sections/1_processing/1.4_doublets.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Doublet Detection</span></span></a>
+  <a href="../../sections/1_processing/1.4_qualitycontrol.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Quality Control</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -234,8 +234,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../sections/1_processing/1.6_qc.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Quality Control</span></span></a>
+  <a href="../../sections/1_processing/1.6_doublets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Doublet Detection</span></span></a>
   </div>
 </li>
       </ul>
@@ -296,7 +296,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">2024-10-24</p>
+      <p class="date">2024-11-06</p>
     </div>
   </div>
   
@@ -315,7 +315,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="do">## set up environment</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressMessages</span>({</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scUnify)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">setwd</span>(<span class="st">"/nemo/lab/caladod/working/Matthew/project/matthew/MH_GSE247917"</span>)})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">setwd</span>(<span class="st">"c"</span>)})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Warning message:
 “replacing previous import ‘cowplot::get_legend’ by ‘ggpubr::get_legend’ when loading ‘scUnify’”
@@ -331,11 +331,11 @@ Warning message:
 <section id="import-cellranger-outputs" class="level2" data-number="4.1">
 <h2 data-number="4.1" class="anchored" data-anchor-id="import-cellranger-outputs"><span class="header-section-number">4.1</span> Import CellRanger Outputs</h2>
 <p>Now we will import the outputs from cellranger-multi as a Seurat object. We will first need to specify a cellranger-multi output directory and a sample name for each sequencing run.</p>
-<div id="cell-4" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="7">
+<div id="cell-4" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="do">## store a list of 10x output directories as a vector &amp; define sample names</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>dir <span class="ot">&lt;-</span> <span class="st">"/nemo/lab/caladod/scratch/hungm/matthew/MH_GSE247917/cellranger/"</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>files <span class="ot">=</span> <span class="fu">list.files</span>(dir)</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>dir.list <span class="ot">&lt;-</span> <span class="fu">paste0</span>(dir, files, <span class="st">"/outs/per_sample_outs/"</span>, files, <span class="st">"/count/sample_filtered_feature_bc_matrix/"</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>samples <span class="ot">=</span> <span class="fu">list.files</span>(dir)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>dir.list <span class="ot">&lt;-</span> <span class="fu">paste0</span>(dir, samples, <span class="st">"/outs/per_sample_outs/"</span>, samples, <span class="st">"/count/sample_filtered_feature_bc_matrix/"</span>)</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>dir.list</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <style>
@@ -346,57 +346,115 @@ Warning message:
 <ol class="list-inline"><li>'/nemo/lab/caladod/scratch/hungm/matthew/MH_GSE247917/cellranger/CV10/outs/per_sample_outs/CV10/count/sample_filtered_feature_bc_matrix/'</li><li>'/nemo/lab/caladod/scratch/hungm/matthew/MH_GSE247917/cellranger/CV12/outs/per_sample_outs/CV12/count/sample_filtered_feature_bc_matrix/'</li></ol>
 </div>
 </div>
-<p>Below is a wrapper function to make a list of Seurat objects from a list of specified cellranger-multi output directories, with sequencing names specified in the “samples” column in the Seurat object metadata. Gene expression counts will be stored in the “RNA” assay of each object. Cells with &lt; 200 nFeatures_RNA and genes expressed in &lt; 3 cells will be pre-filtered.</p>
-<p>If ADT &amp; HTO library is present (in our case yes), we can specify the argument “adt = TRUE” and “hto = TRUE” to 1) separate ADT/HTO library from GEX and 2) separate HTO library from ADT. This should result in 2 extra assays (“ADT” and “HTO”) for the Seurat objects.</p>
-<div class="callout callout-style-default callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Warning
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>If HTO library is present, please make sure HTO feature names have the <u>same prefix</u> when running cellranger-multi to specify in the function below. Otherwise user have to manually separate HTO library from ADT.</p>
-</div>
-</div>
-<div id="cell-6" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="do">## build seurat object with HTO &amp; ADT, specifying strings to separate HTO tag names from ADT tag names</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>obj_list <span class="ot">&lt;-</span> <span class="fu">create_seurat_object</span>(<span class="at">dir =</span> dirlist, <span class="at">samples =</span> samples, <span class="at">hto_str =</span> <span class="st">"anti-human_Hashtag_"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The “create_seurat_object” function is a wrapper to :</p>
+<ol type="1">
+<li>Build a list of seurat object from a list of specified cellranger-multi output directories</li>
+<li>Store gene expression counts in the “RNA” assay of each object. Cells with &lt; 200 nFeatures_RNA and genes expressed in &lt; 3 cells will be pre-filtered.</li>
+<li>Extract cell hashing counts based on the HTO string (hto_str) given and store in the “HTO” assay of each object. All HTO antibody names should have common prefix/suffix.</li>
+<li>Store CITEseq antibody counts in the “ADT” assay of each object and performs DSB normalization (if adt_normalized = T)</li>
+<li>Sample names are specified in the “samples” column in each Seurat object’s metadata.</li>
+</ol>
+<div id="cell-6" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="do">## build seurat object with RNA, HTO &amp; ADT assays, specifying HTO strings and normalizing ADT counts</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>obj.list <span class="ot">&lt;-</span> <span class="fu">create_seurat_object</span>(<span class="at">dir =</span> dir.list, <span class="at">samples =</span> samples, <span class="at">hto_str =</span> <span class="st">"^CV"</span>, <span class="at">adt_normalize =</span> T)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>filtered_matrix_1 --- Loading Sample 1
+<pre><code>CV10 --- Loading Sample 1
 
 Step 1 : Adding RNA counts
+
+10X data contains more than one type and is being returned as a list containing matrices of each type.
+
+Step 2 : Check for Modalities
+
+Step 3 : Adding HTO counts
+
+Warning message:
+“Feature names cannot have underscores ('_'), replacing with dashes ('-')”
+Warning message:
+“Data is of class matrix. Coercing to dgCMatrix.”
+Step 4 : Adding ADT counts
+
+Warning message:
+“Data is of class matrix. Coercing to dgCMatrix.”
+10X data contains more than one type and is being returned as a list containing matrices of each type.
+
+10X data contains more than one type and is being returned as a list containing matrices of each type.
+
+Warning message in dsb::DSBNormalizeProtein(cell_protein_matrix = adt.cell, empty_drop_matrix = adt.raw, :
+“`use.isotype.control` = FALSE is not recommended if setting `denoise.counts` = TRUE 
+when isotype controls are available.
+ If data include isotype controls set `denoise.counts` = TRUE `use.isotype.control` = TRUE nd set `isotype.control.name.vec` to a vector of isotype control rownames”
+Step 5 : Creating Seurat Object
+
+CV12 --- Loading Sample 2
+
+Step 1 : Adding RNA counts
+
+10X data contains more than one type and is being returned as a list containing matrices of each type.
+
+Step 2 : Check for Modalities
+
+Step 3 : Adding HTO counts
+
+Warning message:
+“Feature names cannot have underscores ('_'), replacing with dashes ('-')”
+Warning message:
+“Data is of class matrix. Coercing to dgCMatrix.”
+Step 4 : Adding ADT counts
+
+Warning message:
+“Data is of class matrix. Coercing to dgCMatrix.”
+10X data contains more than one type and is being returned as a list containing matrices of each type.
+
+10X data contains more than one type and is being returned as a list containing matrices of each type.
+
+Warning message in dsb::DSBNormalizeProtein(cell_protein_matrix = adt.cell, empty_drop_matrix = adt.raw, :
+“`use.isotype.control` = FALSE is not recommended if setting `denoise.counts` = TRUE 
+when isotype controls are available.
+ If data include isotype controls set `denoise.counts` = TRUE `use.isotype.control` = TRUE nd set `isotype.control.name.vec` to a vector of isotype control rownames”
+Step 5 : Creating Seurat Object
 </code></pre>
 </div>
-<div class="cell-output cell-output-error">
-<pre><code>ERROR: Error in Read10X(dir[i]): Directory provided does not exist</code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "potential isotype controls detected: "
+[1] "IsoIgG2A" "IsoIgG1" 
+[1] "correcting ambient protein background noise"
+[1] "some proteins with low background variance detected check raw and normalized distributions.  protein stats can be returned with return.stats = TRUE"
+[1] "EpCAM"
+[1] "fitting models to each cell for dsb technical component and removing cell to cell technical noise"
+[1] "potential isotype controls detected: "
+[1] "IsoIgG2A" "IsoIgG1" 
+[1] "correcting ambient protein background noise"
+[1] "some proteins with low background variance detected check raw and normalized distributions.  protein stats can be returned with return.stats = TRUE"
+ [1] "CD186"   "CD1a"    "CD39"    "ICOS.1"  "CD11b"   "CD1c"    "CD134"  
+ [8] "CD27.1"  "CD152"   "CD197"   "CD69.1"  "CD103"   "CD185"   "EpCAM"  
+[15] "CD8"     "CD123"   "CD117"   "HLA-ABC" "CD19.1"  "CD86.1" 
+[1] "fitting models to each cell for dsb technical component and removing cell to cell technical noise"</code></pre>
 </div>
 </div>
 <p>Finally, a quick check if the Seurat objects are set up properly.</p>
-<div id="cell-8" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="14">
+<div id="cell-8" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="25">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="do">## View seurat object list</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>obj_list</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>obj.list</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<pre><code>$filtered_matrix_1
+<pre><code>$CV10
 An object of class Seurat 
-17028 features across 7502 samples within 3 assays 
-Active assay: RNA (16828 features, 0 variable features)
+23862 features across 19484 samples within 3 assays 
+Active assay: RNA (23797 features, 0 variable features)
  1 layer present: counts
  2 other assays present: HTO, ADT
 
-$filtered_matrix_2
+$CV12
 An object of class Seurat 
-17301 features across 8227 samples within 3 assays 
-Active assay: RNA (17101 features, 0 variable features)
+16451 features across 17366 samples within 3 assays 
+Active assay: RNA (16386 features, 0 variable features)
  1 layer present: counts
  2 other assays present: HTO, ADT</code></pre>
 </div>
 </div>
-<div id="cell-9" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="15">
+<div id="cell-9" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="26">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="do">## View metadata the first seurat object</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(obj_list[[<span class="dv">1</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(obj.list[[<span class="dv">1</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true">
 <caption>A data.frame: 10 × 8</caption>
@@ -426,157 +484,151 @@ Active assay: RNA (17101 features, 0 variable features)
 </thead>
 <tbody>
 <tr class="odd">
-<td data-quarto-table-cell-role="th" scope="row">filtered_matrix_1_AAACCTGAGATGCCAG-1</td>
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGAAGCCCA-1</td>
 <td>SeuratProject</td>
-<td>3172</td>
-<td>1155</td>
-<td>1018</td>
-<td>6</td>
-<td>1148</td>
-<td>153</td>
-<td>filtered_matrix_1</td>
+<td>2075</td>
+<td>1226</td>
+<td>91</td>
+<td>3</td>
+<td>1336</td>
+<td>58</td>
+<td>CV10</td>
 </tr>
 <tr class="even">
-<td data-quarto-table-cell-role="th" scope="row">filtered_matrix_1_AAACCTGAGCAATATG-1</td>
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGAGGGATA-1</td>
 <td>SeuratProject</td>
-<td>2904</td>
-<td>1206</td>
-<td>127</td>
-<td>6</td>
-<td>1285</td>
-<td>158</td>
-<td>filtered_matrix_1</td>
+<td>4113</td>
+<td>2208</td>
+<td>257</td>
+<td>3</td>
+<td>1008</td>
+<td>57</td>
+<td>CV10</td>
 </tr>
 <tr class="odd">
-<td data-quarto-table-cell-role="th" scope="row">filtered_matrix_1_AAACCTGAGCCACCTG-1</td>
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGAGTGACC-1</td>
 <td>SeuratProject</td>
-<td>3384</td>
-<td>1150</td>
-<td>566</td>
-<td>6</td>
-<td>1983</td>
-<td>161</td>
-<td>filtered_matrix_1</td>
+<td>1218</td>
+<td>786</td>
+<td>88</td>
+<td>2</td>
+<td>829</td>
+<td>57</td>
+<td>CV10</td>
 </tr>
 <tr class="even">
-<td data-quarto-table-cell-role="th" scope="row">filtered_matrix_1_AAACCTGAGGATCGCA-1</td>
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGATATGGT-1</td>
 <td>SeuratProject</td>
-<td>2535</td>
-<td>928</td>
-<td>235</td>
-<td>6</td>
-<td>2667</td>
-<td>168</td>
-<td>filtered_matrix_1</td>
+<td>6011</td>
+<td>2869</td>
+<td>599</td>
+<td>4</td>
+<td>3661</td>
+<td>57</td>
+<td>CV10</td>
 </tr>
 <tr class="odd">
-<td data-quarto-table-cell-role="th" scope="row">filtered_matrix_1_AAACCTGAGGCTAGCA-1</td>
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGCCAGTAG-1</td>
 <td>SeuratProject</td>
-<td>6264</td>
-<td>1646</td>
-<td>419</td>
-<td>6</td>
-<td>1915</td>
-<td>166</td>
-<td>filtered_matrix_1</td>
+<td>1322</td>
+<td>777</td>
+<td>70</td>
+<td>3</td>
+<td>1216</td>
+<td>58</td>
+<td>CV10</td>
 </tr>
 <tr class="even">
-<td data-quarto-table-cell-role="th" scope="row">filtered_matrix_1_AAACCTGCAAGTCTAC-1</td>
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGCGATATA-1</td>
 <td>SeuratProject</td>
-<td>5994</td>
-<td>1772</td>
-<td>558</td>
-<td>6</td>
-<td>1904</td>
-<td>164</td>
-<td>filtered_matrix_1</td>
+<td>1743</td>
+<td>1134</td>
+<td>84</td>
+<td>4</td>
+<td>700</td>
+<td>57</td>
+<td>CV10</td>
 </tr>
 <tr class="odd">
-<td data-quarto-table-cell-role="th" scope="row">filtered_matrix_1_AAACCTGCAGAGTGTG-1</td>
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGGAATCGC-1</td>
 <td>SeuratProject</td>
-<td>3223</td>
-<td>907</td>
-<td>90</td>
-<td>6</td>
-<td>735</td>
-<td>152</td>
-<td>filtered_matrix_1</td>
+<td>2892</td>
+<td>1617</td>
+<td>147</td>
+<td>3</td>
+<td>1479</td>
+<td>58</td>
+<td>CV10</td>
 </tr>
 <tr class="even">
-<td data-quarto-table-cell-role="th" scope="row">filtered_matrix_1_AAACCTGCATCAGTCA-1</td>
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGTCAAGCG-1</td>
 <td>SeuratProject</td>
-<td>1726</td>
-<td>798</td>
-<td>227</td>
-<td>6</td>
-<td>1007</td>
-<td>158</td>
-<td>filtered_matrix_1</td>
+<td>1258</td>
+<td>808</td>
+<td>108</td>
+<td>2</td>
+<td>1063</td>
+<td>55</td>
+<td>CV10</td>
 </tr>
 <tr class="odd">
-<td data-quarto-table-cell-role="th" scope="row">filtered_matrix_1_AAACCTGCATGAACCT-1</td>
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGTGGAGTC-1</td>
 <td>SeuratProject</td>
-<td>692</td>
-<td>418</td>
-<td>577</td>
-<td>6</td>
-<td>1412</td>
-<td>156</td>
-<td>filtered_matrix_1</td>
+<td>1918</td>
+<td>1312</td>
+<td>62</td>
+<td>4</td>
+<td>20921</td>
+<td>58</td>
+<td>CV10</td>
 </tr>
 <tr class="even">
-<td data-quarto-table-cell-role="th" scope="row">filtered_matrix_1_AAACCTGCATTTGCCC-1</td>
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGCAAAGGTGC-1</td>
 <td>SeuratProject</td>
-<td>5568</td>
-<td>1594</td>
-<td>152</td>
-<td>6</td>
-<td>3386</td>
-<td>169</td>
-<td>filtered_matrix_1</td>
+<td>1124</td>
+<td>747</td>
+<td>162</td>
+<td>3</td>
+<td>1237</td>
+<td>56</td>
+<td>CV10</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
-<div id="cell-10" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="16">
+<div id="cell-10" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="28">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="do">## View assays in first seurat object</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(a <span class="cf">in</span> <span class="fu">names</span>(obj_list[[<span class="dv">1</span>]]<span class="sc">@</span>assays)){</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>(obj_list[[<span class="dv">1</span>]][[a]])}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(a <span class="cf">in</span> <span class="fu">names</span>(obj.list[[<span class="dv">1</span>]]<span class="sc">@</span>assays)){</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>(obj.list[[<span class="dv">1</span>]][[a]])}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Assay (v5) data with 16828 features for 7502 cells
+<pre><code>Assay (v5) data with 23797 features for 19484 cells
 First 10 features:
- AL627309.1, AL669831.5, LINC00115, FAM41C, NOC2L, KLHL17, PLEKHN1,
-AL645608.8, HES4, ISG15 
+ AL627309.1, AL627309.5, AP006222.2, LINC01409, FAM87B, LINC01128,
+LINC00115, FAM41C, AL645608.6, SAMD11 
 Layers:
  counts 
-Assay (v5) data with 8 features for 7502 cells
-First 8 features:
- anti-human-Hashtag-1-totalC, anti-human-Hashtag-2-totalC,
-anti-human-Hashtag-3-totalC, anti-human-Hashtag-4-totalC,
-anti-human-Hashtag-5-totalC, anti-human-Hashtag-6-totalC,
-anti-human-Hashtag-7-totalC, anti-human-Hashtag-8-totalC 
+Assay (v5) data with 4 features for 19484 cells
+First 4 features:
+ CV-011-d120-booster, CV-001-d28-booster, CV-001-d7-booster,
+CV-001-d0-booster 
 Layers:
  counts 
-Assay (v5) data with 192 features for 7502 cells
+Assay (v5) data with 61 features for 19484 cells
 First 10 features:
- anti-human-CD80-totalC, anti-human-CD86-totalC,
-anti-human-CD274-totalC, anti-human-CD273-totalC,
-anti-human-CD275-totalC, anti-mouse-human-CD11b-totalC,
-anti-human-CD252-totalC, anti-human-CD137L-totalC,
-anti-human-CD155-totalC, anti-human-CD112-totalC 
+ CD138, CD186, CD38.1, CD1a, CD26, CD45, CD127, CD28.1, CD2.1, CD184 
 Layers:
- counts </code></pre>
+ counts, data </code></pre>
 </div>
 </div>
 </section>
 <section id="session-info" class="level2 unnumbered">
 <h2 class="unnumbered anchored" data-anchor-id="session-info">Session Info</h2>
-<div id="cell-12" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="19">
+<div id="cell-12" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="do">## save output of the this session</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">qsave</span>(obj_list, <span class="at">file =</span> <span class="st">"seurat/1_process/GSE247917_raw.qs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">qsave</span>(obj.list, <span class="at">file =</span> <span class="st">"seurat/1_processing/1.2_GSE247917_raw.qs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="cell-13" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="20">
+<div id="cell-13" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="30">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <pre><code>R version 4.3.2 (2023-10-31)
@@ -602,120 +654,128 @@ attached base packages:
 [8] methods   base     
 
 other attached packages:
- [1] qs_0.26.3                   viridis_0.6.4              
- [3] viridisLite_0.4.2           ggalluvial_0.12.5          
- [5] ggnewscale_0.4.9            ggrepel_0.9.4              
- [7] UCell_2.4.0                 writexl_1.4.2              
- [9] readxl_1.4.3                wesanderson_0.3.6.9000     
-[11] ComplexHeatmap_2.16.0       cluster_2.1.4              
-[13] lmtest_0.9-40               zoo_1.8-12                 
-[15] binaryLogic_0.3.9           jaccard_0.1.0              
-[17] RColorBrewer_1.1-3          celda_1.16.1               
-[19] Matrix_1.6-1                SingleCellExperiment_1.24.0
-[21] SummarizedExperiment_1.32.0 Biobase_2.62.0             
-[23] GenomicRanges_1.54.1        GenomeInfoDb_1.38.0        
-[25] IRanges_2.36.0              S4Vectors_0.40.1           
-[27] BiocGenerics_0.48.0         MatrixGenerics_1.14.0      
-[29] matrixStats_1.0.0           ggpubr_0.6.0               
-[31] rstatix_0.7.2               gridExtra_2.3              
-[33] scales_1.3.0                clustree_0.5.0             
-[35] ggraph_2.1.0                cowplot_1.1.1              
-[37] patchwork_1.2.0             SeuratDisk_0.0.0.9021      
-[39] tonsilref.SeuratData_2.0.0  pbmcref.SeuratData_1.0.0   
-[41] pbmc3k.SeuratData_3.1.4     SeuratData_0.2.2.9001      
-[43] Seurat_5.0.0                SeuratObject_5.0.0         
-[45] sp_2.1-1                    lubridate_1.9.3            
-[47] forcats_1.0.0               stringr_1.5.0              
-[49] dplyr_1.1.4                 purrr_1.0.2                
-[51] readr_2.1.4                 tidyr_1.3.0                
-[53] tibble_3.2.1                ggplot2_3.5.1              
-[55] tidyverse_2.0.0             biomaRt_2.58.0             
+ [1] scUnify_0.0.0.9000          ComplexHeatmap_2.16.0      
+ [3] DoubletFinder_2.0.4         scDblFinder_1.14.0         
+ [5] celda_1.16.1                Matrix_1.6-1               
+ [7] SingleCellExperiment_1.24.0 SummarizedExperiment_1.32.0
+ [9] Biobase_2.62.0              GenomicRanges_1.54.1       
+[11] GenomeInfoDb_1.38.0         IRanges_2.36.0             
+[13] S4Vectors_0.40.1            BiocGenerics_0.48.0        
+[15] MatrixGenerics_1.14.0       matrixStats_1.0.0          
+[17] UCell_2.4.0                 BiocParallel_1.36.0        
+[19] biomaRt_2.58.0              ggh4x_0.2.5                
+[21] harmony_1.1.0               Rcpp_1.0.11                
+[23] Seurat_5.0.0                SeuratObject_5.0.0         
+[25] sp_2.1-1                    ggpubr_0.6.0               
+[27] rstatix_0.7.2               writexl_1.4.2              
+[29] readxl_1.4.3                qs_0.26.3                  
+[31] RColorBrewer_1.1-3          wesanderson_0.3.6.9000     
+[33] viridis_0.6.4               viridisLite_0.4.2          
+[35] gridExtra_2.3               scales_1.3.0               
+[37] cowplot_1.1.1               patchwork_1.2.0            
+[39] ggrepel_0.9.4               lubridate_1.9.3            
+[41] forcats_1.0.0               stringr_1.5.0              
+[43] dplyr_1.1.4                 purrr_1.0.2                
+[45] readr_2.1.4                 tidyr_1.3.0                
+[47] tibble_3.2.1                ggplot2_3.5.1              
+[49] tidyverse_2.0.0            
 
 loaded via a namespace (and not attached):
-  [1] spatstat.sparse_3.0-3      bitops_1.0-7              
-  [3] httr_1.4.7                 doParallel_1.0.17         
-  [5] repr_1.1.6                 tools_4.3.2               
-  [7] sctransform_0.4.1          backports_1.4.1           
-  [9] utf8_1.2.4                 R6_2.5.1                  
- [11] lazyeval_0.2.2             uwot_0.1.16               
- [13] GetoptLong_1.0.5           withr_2.5.2               
- [15] prettyunits_1.2.0          progressr_0.14.0          
- [17] cli_3.6.1                  spatstat.explore_3.2-5    
- [19] fastDummies_1.7.3          enrichR_3.2               
- [21] assertive.files_0.0-2      spatstat.data_3.0-3       
- [23] ggridges_0.5.4             pbapply_1.7-2             
- [25] pbdZMQ_0.3-9               R.utils_2.12.2            
- [27] parallelly_1.36.0          WriteXLS_6.4.0            
- [29] RSQLite_2.3.2              RApiSerialize_0.1.2       
- [31] shape_1.4.6                gridGraphics_0.5-1        
- [33] generics_0.1.3             combinat_0.0-8            
- [35] ica_1.0-3                  spatstat.random_3.2-1     
- [37] car_3.1-2                  fansi_1.0.5               
- [39] abind_1.4-5                R.methodsS3_1.8.2         
- [41] lifecycle_1.0.3            carData_3.0-5             
- [43] qvalue_2.32.0              SparseArray_1.2.0         
- [45] BiocFileCache_2.10.1       Rtsne_0.16                
- [47] blob_1.2.4                 promises_1.2.1            
- [49] crayon_1.5.2               miniUI_0.1.1.1            
- [51] lattice_0.21-8             KEGGREST_1.42.0           
- [53] magick_2.8.1               pillar_1.9.0              
- [55] rjson_0.2.21               future.apply_1.11.0       
- [57] codetools_0.2-19           leiden_0.4.3              
- [59] glue_1.6.2                 data.table_1.14.8         
- [61] vctrs_0.6.4                png_0.1-8                 
- [63] spam_2.10-0                cellranger_1.1.0          
- [65] gtable_0.3.4               cachem_1.0.8              
- [67] S4Arrays_1.2.0             mime_0.12                 
- [69] RcppEigen_0.3.3.9.3        tidygraph_1.2.3           
- [71] survival_3.5-7             iterators_1.0.14          
- [73] ellipsis_0.3.2             fitdistrplus_1.1-11       
- [75] ROCR_1.0-11                nlme_3.1-163              
- [77] bit64_4.0.5                progress_1.2.2            
- [79] filelock_1.0.2             RcppAnnoy_0.0.21          
- [81] irlba_2.3.5.1              KernSmooth_2.23-22        
- [83] colorspace_2.1-0           DBI_1.1.3                 
- [85] tidyselect_1.2.0           bit_4.0.5                 
- [87] compiler_4.3.2             curl_5.1.0                
- [89] BiocNeighbors_1.18.0       hdf5r_1.3.8               
- [91] assertive.properties_0.0-5 xml2_1.3.5                
- [93] DelayedArray_0.28.0        plotly_4.10.3             
- [95] stringfish_0.16.0          rappdirs_0.3.3            
- [97] digest_0.6.33              goftest_1.2-3             
- [99] spatstat.utils_3.0-5       XVector_0.42.0            
-[101] assertive.numbers_0.0-2    htmltools_0.5.6.1         
-[103] pkgconfig_2.0.3            base64enc_0.1-3           
-[105] dbplyr_2.4.0               fastmap_1.1.1             
-[107] GlobalOptions_0.1.2        rlang_1.1.3               
-[109] htmlwidgets_1.6.2          shiny_1.7.5.1             
-[111] farver_2.1.1               jsonlite_1.8.7            
-[113] BiocParallel_1.36.0        R.oo_1.25.0               
-[115] RCurl_1.98-1.12            magrittr_2.0.3            
-[117] GenomeInfoDbData_1.2.11    dotCall64_1.1-0           
-[119] multipanelfigure_2.1.2     IRkernel_1.3.2            
-[121] munsell_0.5.0              Rcpp_1.0.11               
-[123] reticulate_1.34.0          assertive.base_0.0-9      
-[125] stringi_1.7.12             MCMCprecision_0.4.0       
-[127] zlibbioc_1.48.0            MASS_7.3-60               
-[129] plyr_1.8.9                 parallel_4.3.2            
-[131] listenv_0.9.0              deldir_1.0-9              
-[133] Biostrings_2.70.1          graphlayouts_1.0.0        
-[135] IRdisplay_1.1              splines_4.3.2             
-[137] tensor_1.5                 circlize_0.4.15           
-[139] hms_1.1.3                  igraph_1.5.1              
-[141] uuid_1.1-1                 spatstat.geom_3.2-7       
-[143] ggsignif_0.6.4             RcppHNSW_0.5.0            
-[145] reshape2_1.4.4             XML_3.99-0.14             
-[147] evaluate_0.23              RcppParallel_5.1.7        
-[149] tzdb_0.4.0                 foreach_1.5.2             
-[151] tweenr_2.0.2               httpuv_1.6.12             
-[153] RANN_2.6.1                 polyclip_1.10-6           
-[155] clue_0.3-64                future_1.33.0             
-[157] scattermore_1.2            ggforce_0.4.1             
-[159] assertive.types_0.0-3      broom_1.0.5               
-[161] xtable_1.8-4               RSpectra_0.16-1           
-[163] later_1.3.1                memoise_2.0.1             
-[165] AnnotationDbi_1.64.0       timechange_0.2.0          
-[167] globals_0.16.2            </code></pre>
+  [1] R.methodsS3_1.8.2          progress_1.2.2            
+  [3] goftest_1.2-3              Biostrings_2.70.1         
+  [5] vctrs_0.6.4                spatstat.random_3.2-1     
+  [7] RApiSerialize_0.1.2        digest_0.6.33             
+  [9] png_0.1-8                  shape_1.4.6               
+ [11] IRdisplay_1.1              deldir_1.0-9              
+ [13] parallelly_1.36.0          combinat_0.0-8            
+ [15] magick_2.8.1               MASS_7.3-60               
+ [17] reshape2_1.4.4             httpuv_1.6.12             
+ [19] foreach_1.5.2              withr_3.0.1               
+ [21] ellipsis_0.3.2             survival_3.5-7            
+ [23] memoise_2.0.1              ggbeeswarm_0.7.2          
+ [25] zoo_1.8-12                 GlobalOptions_0.1.2       
+ [27] pbapply_1.7-2              R.oo_1.25.0               
+ [29] IRkernel_1.3.2             prettyunits_1.2.0         
+ [31] KEGGREST_1.42.0            promises_1.2.1            
+ [33] httr_1.4.7                 restfulr_0.0.15           
+ [35] globals_0.16.2             fitdistrplus_1.1-11       
+ [37] stringfish_0.16.0          dsb_1.0.4                 
+ [39] miniUI_0.1.1.1             generics_0.1.3            
+ [41] base64enc_0.1-3            curl_5.1.0                
+ [43] repr_1.1.6                 zlibbioc_1.48.0           
+ [45] ScaledMatrix_1.8.1         polyclip_1.10-6           
+ [47] GenomeInfoDbData_1.2.11    SparseArray_1.2.0         
+ [49] RcppEigen_0.3.3.9.3        xtable_1.8-4              
+ [51] doParallel_1.0.17          evaluate_0.23             
+ [53] S4Arrays_1.2.0             BiocFileCache_2.10.1      
+ [55] hms_1.1.3                  irlba_2.3.5.1             
+ [57] colorspace_2.1-0           filelock_1.0.2            
+ [59] ROCR_1.0-11                reticulate_1.34.0         
+ [61] spatstat.data_3.0-3        magrittr_2.0.3            
+ [63] lmtest_0.9-40              later_1.3.1               
+ [65] lattice_0.21-8             spatstat.geom_3.2-7       
+ [67] future.apply_1.11.0        scattermore_1.2           
+ [69] XML_3.99-0.14              scuttle_1.10.3            
+ [71] assertive.numbers_0.0-2    RcppAnnoy_0.0.21          
+ [73] pillar_1.9.0               nlme_3.1-163              
+ [75] iterators_1.0.14           compiler_4.3.2            
+ [77] beachmat_2.18.0            RSpectra_0.16-1           
+ [79] stringi_1.7.12             assertive.properties_0.0-5
+ [81] tensor_1.5                 GenomicAlignments_1.38.0  
+ [83] MCMCprecision_0.4.0        plyr_1.8.9                
+ [85] crayon_1.5.2               abind_1.4-5               
+ [87] BiocIO_1.12.0              scater_1.28.0             
+ [89] gridGraphics_0.5-1         locfit_1.5-9.8            
+ [91] bit_4.0.5                  codetools_0.2-19          
+ [93] BiocSingular_1.16.0        GetoptLong_1.0.5          
+ [95] plotly_4.10.3              mime_0.12                 
+ [97] splines_4.3.2              circlize_0.4.15           
+ [99] fastDummies_1.7.3          dbplyr_2.4.0              
+[101] sparseMatrixStats_1.14.0   cellranger_1.1.0          
+[103] blob_1.2.4                 utf8_1.2.4                
+[105] clue_0.3-64                pbdZMQ_0.3-9              
+[107] WriteXLS_6.4.0             listenv_0.9.0             
+[109] DelayedMatrixStats_1.24.0  ggsignif_0.6.4            
+[111] assertive.base_0.0-9       statmod_1.5.0             
+[113] tzdb_0.4.0                 pkgconfig_2.0.3           
+[115] tools_4.3.2                cachem_1.0.8              
+[117] RSQLite_2.3.2              DBI_1.1.3                 
+[119] fastmap_1.1.1              ica_1.0-3                 
+[121] Rsamtools_2.18.0           broom_1.0.5               
+[123] dotCall64_1.1-0            carData_3.0-5             
+[125] RANN_2.6.1                 yaml_2.3.7                
+[127] rtracklayer_1.62.0         cli_3.6.1                 
+[129] assertive.types_0.0-3      leiden_0.4.3              
+[131] lifecycle_1.0.3            uwot_0.1.16               
+[133] bluster_1.10.0             assertive.files_0.0-2     
+[135] backports_1.4.1            timechange_0.2.0          
+[137] gtable_0.3.4               rjson_0.2.21              
+[139] ggridges_0.5.4             progressr_0.14.0          
+[141] parallel_4.3.2             limma_3.56.2              
+[143] jsonlite_1.8.7             edgeR_3.42.4              
+[145] RcppHNSW_0.5.0             bitops_1.0-7              
+[147] bit64_4.0.5                xgboost_1.7.7.1           
+[149] Rtsne_0.16                 spatstat.utils_3.0-5      
+[151] BiocNeighbors_1.18.0       RcppParallel_5.1.7        
+[153] metapod_1.8.0              dqrng_0.3.1               
+[155] enrichR_3.2                R.utils_2.12.2            
+[157] lazyeval_0.2.2             shiny_1.7.5.1             
+[159] htmltools_0.5.6.1          sctransform_0.4.1         
+[161] rappdirs_0.3.3             glue_1.8.0                
+[163] spam_2.10-0                XVector_0.42.0            
+[165] RCurl_1.98-1.12            scran_1.28.2              
+[167] mclust_6.0.1               igraph_1.5.1              
+[169] R6_2.5.1                   cluster_2.1.4             
+[171] DelayedArray_0.28.0        tidyselect_1.2.0          
+[173] vipor_0.4.5                xml2_1.3.5                
+[175] car_3.1-2                  AnnotationDbi_1.64.0      
+[177] future_1.33.0              rsvd_1.0.5                
+[179] munsell_0.5.0              KernSmooth_2.23-22        
+[181] multipanelfigure_2.1.2     data.table_1.14.8         
+[183] htmlwidgets_1.6.2          rlang_1.1.4               
+[185] spatstat.sparse_3.0-3      spatstat.explore_3.2-5    
+[187] uuid_1.1-1                 fansi_1.0.6               
+[189] beeswarm_0.4.0            </code></pre>
 </div>
 </div>
 
