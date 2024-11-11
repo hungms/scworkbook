@@ -12,7 +12,7 @@ book:
   repo-actions: [edit]
   sidebar:
     style: docked
-    background: light
+    background: dark
     alignment: center
     tools:
       - icon: github
@@ -38,12 +38,14 @@ book:
       - sections/1_processing/1.2_seurat.ipynb
       - sections/1_processing/1.3_demux.ipynb
       - sections/1_processing/1.4_qualitycontrol.ipynb
-      - sections/1_processing/1.5_decont.ipynb
-      - sections/1_processing/1.6_doublets.ipynb
+      - sections/1_processing/1.5_clustering.ipynb
+      - sections/1_processing/1.6_integration.ipynb
+      #- sections/1_processing/1.5_decont.ipynb
+      - sections/1_processing/1.7_doublets.ipynb
     - text: "---"
-    - part: "**Chapter 2 : Cell Classification**\n"
-      chapters:
-      - sections/2_cellclassification/2.1_sctransform.ipynb
+    #- part: "**Chapter 2 : Cell Classification**\n"
+    #  chapters:
+    #  - sections/2_cellclassification/2.1_sctransform.ipynb
       #- sections/2_cellclassification/2.2_20240827_annotation.ipynb
       #- sections/2_cellclassification/2.3_20240827_tcells.ipynb
       #- sections/2_cellclassification/2.4_20240827_bcells.ipynb
@@ -55,12 +57,16 @@ book:
 
 format:
   html:
-    fontsize: 0.8em
+    toc: true
+    toc-expand: 1
+    number-sections: true
+    number-offset: 3
+    fontsize: 0.9em
     theme: 
       - flatly
     grid:
-      sidebar-width: 350px
-      body-width: 1000px
+      sidebar-width: 300px
+      body-width: 1050px
       margin-width: 400px
       gutter-width: 1.5rem
     code-fold: false

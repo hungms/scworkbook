@@ -1,0 +1,2709 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.549">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Matthew Hung">
+<meta name="dcterms.date" content="2024-11-08">
+
+<title>Single-Cell Workbook - 7&nbsp; Unsupervised Clustering</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../sections/1_processing/1.6_integration.html" rel="next">
+<link href="../../sections/1_processing/1.4_qualitycontrol.html" rel="prev">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+</head>
+
+<body class="nav-sidebar docked">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../sections/1_processing/1.1_cellranger.html"><strong>Chapter 1 : Data Processing</strong></a></li><li class="breadcrumb-item"><a href="../../sections/1_processing/1.5_clustering.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Unsupervised Clustering</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-center sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../../">Single-Cell Workbook</a> 
+        <div class="sidebar-tools-main">
+    <div class="dropdown">
+      <a href="" title="" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" aria-label=""><i class="bi bi-github"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/mshung229/scworkbook/">
+            Report A Bug
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/mshung229">
+            Follow Me
+            </a>
+          </li>
+      </ul>
+    </div>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><b>Preface</b></span></a>
+  </div>
+</li>
+        <li class="px-0"><hr class="sidebar-divider hi "></li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text"><strong>Chapter 0 : Introduction</strong></span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sections/0_introduction/0.1_installation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Installation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sections/0_introduction/0.2_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Data Description</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="px-0"><hr class="sidebar-divider hi "></li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text"><strong>Chapter 1 : Data Processing</strong></span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sections/1_processing/1.1_cellranger.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">CellRanger (Multi)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sections/1_processing/1.2_seurat.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Seurat Object</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sections/1_processing/1.3_demux.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Cell Demultiplexing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sections/1_processing/1.4_qualitycontrol.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Quality Control</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sections/1_processing/1.5_clustering.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Unsupervised Clustering</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sections/1_processing/1.6_integration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Data Integration</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sections/1_processing/1.7_doublets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Doublet Detection</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="px-0"><hr class="sidebar-divider hi "></li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="1">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#motivation" id="toc-motivation" class="nav-link active" data-scroll-target="#motivation"><span class="header-section-number">7.1</span> Motivation</a></li>
+  <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup"><span class="header-section-number">7.2</span> Setup</a></li>
+  <li><a href="#cell-cycle-scoring" id="toc-cell-cycle-scoring" class="nav-link" data-scroll-target="#cell-cycle-scoring"><span class="header-section-number">7.3</span> Cell Cycle Scoring</a></li>
+  <li><a href="#find-variable-features" id="toc-find-variable-features" class="nav-link" data-scroll-target="#find-variable-features"><span class="header-section-number">7.4</span> Find Variable Features</a></li>
+  <li><a href="#batch-correction" id="toc-batch-correction" class="nav-link" data-scroll-target="#batch-correction"><span class="header-section-number">7.5</span> Batch Correction</a></li>
+  <li><a href="#principal-component-analysis" id="toc-principal-component-analysis" class="nav-link" data-scroll-target="#principal-component-analysis"><span class="header-section-number">7.6</span> Principal Component Analysis</a></li>
+  <li><a href="#umap-projection" id="toc-umap-projection" class="nav-link" data-scroll-target="#umap-projection"><span class="header-section-number">7.7</span> UMAP Projection</a></li>
+  <li><a href="#find-clusters" id="toc-find-clusters" class="nav-link" data-scroll-target="#find-clusters"><span class="header-section-number">7.8</span> Find Clusters</a>
+  <ul class="collapse">
+  <li><a href="#louvain-algorithm" id="toc-louvain-algorithm" class="nav-link" data-scroll-target="#louvain-algorithm"><span class="header-section-number">7.8.1</span> Louvain Algorithm</a></li>
+  <li><a href="#leiden-algorithm" id="toc-leiden-algorithm" class="nav-link" data-scroll-target="#leiden-algorithm"><span class="header-section-number">7.8.2</span> Leiden Algorithm</a></li>
+  </ul></li>
+  <li><a href="#session-info" id="toc-session-info" class="nav-link" data-scroll-target="#session-info">Session Info</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../sections/1_processing/1.1_cellranger.html"><strong>Chapter 1 : Data Processing</strong></a></li><li class="breadcrumb-item"><a href="../../sections/1_processing/1.5_clustering.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Unsupervised Clustering</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Unsupervised Clustering</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Matthew Hung </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">November 8, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="motivation" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="motivation"><span class="header-section-number">7.1</span> Motivation</h2>
+</section>
+<section id="setup" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="setup"><span class="header-section-number">7.2</span> Setup</h2>
+<div id="cell-3" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># set up environment</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressMessages</span>({</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scUnify)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(clustree)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reticulate)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">setwd</span>(<span class="st">"/nemo/lab/caladod/working/Matthew/project/matthew/MH_GSE247917"</span>)})</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># import seurat object</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">"seurat/1_processing/1.4_GSE247917_qc.qs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning message:
+“replacing previous import ‘cowplot::get_legend’ by ‘ggpubr::get_legend’ when loading ‘scUnify’”
+Warning message:
+“replacing previous import ‘cowplot::align_plots’ by ‘patchwork::align_plots’ when loading ‘scUnify’”
+Warning message:
+“replacing previous import ‘biomaRt::select’ by ‘rstatix::select’ when loading ‘scUnify’”
+Warning message:
+“replacing previous import ‘scales::viridis_pal’ by ‘viridis::viridis_pal’ when loading ‘scUnify’”</code></pre>
+</div>
+</div>
+<div id="cell-4" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># inspect seurat object</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>obj</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>An object of class Seurat 
+23961 features across 36850 samples within 5 assays 
+Active assay: RNA (23560 features, 0 variable features)
+ 2 layers present: counts, data
+ 4 other assays present: HTO, ADT, BCR, TCR</code></pre>
+</div>
+</div>
+</section>
+<section id="cell-cycle-scoring" class="level2" data-number="7.3">
+<h2 data-number="7.3" class="anchored" data-anchor-id="cell-cycle-scoring"><span class="header-section-number">7.3</span> Cell Cycle Scoring</h2>
+<div id="cell-6" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">calculate_cellcycle</span>(obj, <span class="at">org =</span> <span class="st">"human"</span>, <span class="at">remove_genes =</span> F, <span class="at">assay =</span> <span class="st">"RNA"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning message:
+“The following features are not present in the object: MLF1IP, not searching for symbol synonyms”
+Warning message:
+“The following features are not present in the object: FAM64A, HN1, not searching for symbol synonyms”</code></pre>
+</div>
+</div>
+<div id="cell-7" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(obj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true">
+<caption>A data.frame: 10 × 33</caption>
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th" scope="col">orig.ident</th>
+<th data-quarto-table-cell-role="th" scope="col">nCount_RNA</th>
+<th data-quarto-table-cell-role="th" scope="col">nFeature_RNA</th>
+<th data-quarto-table-cell-role="th" scope="col">nCount_HTO</th>
+<th data-quarto-table-cell-role="th" scope="col">nFeature_HTO</th>
+<th data-quarto-table-cell-role="th" scope="col">nCount_ADT</th>
+<th data-quarto-table-cell-role="th" scope="col">nFeature_ADT</th>
+<th data-quarto-table-cell-role="th" scope="col">samples</th>
+<th data-quarto-table-cell-role="th" scope="col">pct.mt</th>
+<th data-quarto-table-cell-role="th" scope="col">pct.rb</th>
+<th data-quarto-table-cell-role="th" scope="col">⋯</th>
+<th data-quarto-table-cell-role="th" scope="col">nCount_BCR</th>
+<th data-quarto-table-cell-role="th" scope="col">nFeature_BCR</th>
+<th data-quarto-table-cell-role="th" scope="col">nCount_TCR</th>
+<th data-quarto-table-cell-role="th" scope="col">nFeature_TCR</th>
+<th data-quarto-table-cell-role="th" scope="col">hardqc</th>
+<th data-quarto-table-cell-role="th" scope="col">softqc</th>
+<th data-quarto-table-cell-role="th" scope="col">finalqc</th>
+<th data-quarto-table-cell-role="th" scope="col">S.Score</th>
+<th data-quarto-table-cell-role="th" scope="col">G2M.Score</th>
+<th data-quarto-table-cell-role="th" scope="col">Phase</th>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;dbl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;int&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;dbl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;int&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;dbl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;int&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;dbl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;dbl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">⋯</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;dbl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;int&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;dbl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;int&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;dbl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;dbl&gt;</th>
+<th data-quarto-table-cell-role="th" scope="col">&lt;chr&gt;</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGAAGCCCA-1</td>
+<td>SeuratProject</td>
+<td>2075</td>
+<td>1226</td>
+<td>91</td>
+<td>3</td>
+<td>1336</td>
+<td>58</td>
+<td>CV10</td>
+<td>2.602410</td>
+<td>11.036145</td>
+<td>⋯</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>Fail</td>
+<td>Pass</td>
+<td>Pass</td>
+<td>-0.01487464</td>
+<td>0.031815119</td>
+<td>G2M</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGAGGGATA-1</td>
+<td>SeuratProject</td>
+<td>4110</td>
+<td>2205</td>
+<td>257</td>
+<td>3</td>
+<td>1008</td>
+<td>57</td>
+<td>CV10</td>
+<td>4.449307</td>
+<td>7.537078</td>
+<td>⋯</td>
+<td>1</td>
+<td>1</td>
+<td>2</td>
+<td>2</td>
+<td>Fail</td>
+<td>Pass</td>
+<td>Pass</td>
+<td>-0.09264527</td>
+<td>-0.012183872</td>
+<td>G1</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGAGTGACC-1</td>
+<td>SeuratProject</td>
+<td>1216</td>
+<td>785</td>
+<td>88</td>
+<td>2</td>
+<td>829</td>
+<td>57</td>
+<td>CV10</td>
+<td>3.201970</td>
+<td>18.226601</td>
+<td>⋯</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>1</td>
+<td>Pass</td>
+<td>Pass</td>
+<td>Pass</td>
+<td>-0.04760012</td>
+<td>-0.089796123</td>
+<td>G1</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGATATGGT-1</td>
+<td>SeuratProject</td>
+<td>6005</td>
+<td>2865</td>
+<td>599</td>
+<td>4</td>
+<td>3661</td>
+<td>57</td>
+<td>CV10</td>
+<td>5.706205</td>
+<td>5.905839</td>
+<td>⋯</td>
+<td>3</td>
+<td>2</td>
+<td>3</td>
+<td>2</td>
+<td>Fail</td>
+<td>Fail</td>
+<td>Fail</td>
+<td>-0.04125181</td>
+<td>-0.029838993</td>
+<td>G1</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGCCAGTAG-1</td>
+<td>SeuratProject</td>
+<td>1318</td>
+<td>774</td>
+<td>70</td>
+<td>3</td>
+<td>1216</td>
+<td>58</td>
+<td>CV10</td>
+<td>3.479576</td>
+<td>23.146747</td>
+<td>⋯</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>3</td>
+<td>Pass</td>
+<td>Pass</td>
+<td>Pass</td>
+<td>-0.04531868</td>
+<td>-0.038159736</td>
+<td>G1</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGCGATATA-1</td>
+<td>SeuratProject</td>
+<td>1739</td>
+<td>1131</td>
+<td>84</td>
+<td>4</td>
+<td>700</td>
+<td>57</td>
+<td>CV10</td>
+<td>4.016064</td>
+<td>6.368330</td>
+<td>⋯</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>3</td>
+<td>Pass</td>
+<td>Pass</td>
+<td>Pass</td>
+<td>0.04950195</td>
+<td>-0.085206015</td>
+<td>S</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGGAATCGC-1</td>
+<td>SeuratProject</td>
+<td>2882</td>
+<td>1614</td>
+<td>147</td>
+<td>3</td>
+<td>1479</td>
+<td>58</td>
+<td>CV10</td>
+<td>3.561549</td>
+<td>13.105118</td>
+<td>⋯</td>
+<td>0</td>
+<td>0</td>
+<td>10</td>
+<td>3</td>
+<td>Fail</td>
+<td>Pass</td>
+<td>Fail</td>
+<td>0.08823207</td>
+<td>-0.075590720</td>
+<td>S</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGTCAAGCG-1</td>
+<td>SeuratProject</td>
+<td>1257</td>
+<td>807</td>
+<td>108</td>
+<td>2</td>
+<td>1063</td>
+<td>55</td>
+<td>CV10</td>
+<td>3.179650</td>
+<td>17.170111</td>
+<td>⋯</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>Fail</td>
+<td>Fail</td>
+<td>Fail</td>
+<td>0.04558087</td>
+<td>0.065000581</td>
+<td>G2M</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGAGTGGAGTC-1</td>
+<td>SeuratProject</td>
+<td>1910</td>
+<td>1305</td>
+<td>62</td>
+<td>4</td>
+<td>20921</td>
+<td>58</td>
+<td>CV10</td>
+<td>2.815433</td>
+<td>9.489051</td>
+<td>⋯</td>
+<td>4</td>
+<td>3</td>
+<td>4</td>
+<td>4</td>
+<td>Pass</td>
+<td>Pass</td>
+<td>Fail</td>
+<td>-0.06567529</td>
+<td>0.005175199</td>
+<td>G2M</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th" scope="row">CV10_AAACCTGCAAAGGTGC-1</td>
+<td>SeuratProject</td>
+<td>1111</td>
+<td>744</td>
+<td>162</td>
+<td>3</td>
+<td>1237</td>
+<td>56</td>
+<td>CV10</td>
+<td>2.846975</td>
+<td>15.569395</td>
+<td>⋯</td>
+<td>13</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>Pass</td>
+<td>Pass</td>
+<td>Pass</td>
+<td>-0.03725667</td>
+<td>0.032892538</td>
+<td>G2M</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="find-variable-features" class="level2" data-number="7.4">
+<h2 data-number="7.4" class="anchored" data-anchor-id="find-variable-features"><span class="header-section-number">7.4</span> Find Variable Features</h2>
+<p>Here we will use “RNA” assay and use the top 2000 variable features (~10% of all features) to perform clustering analysis.</p>
+<div id="cell-9" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># select assay and nfeatures to use</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>assay <span class="ot">&lt;-</span> <span class="st">"RNA"</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>nfeatures <span class="ot">=</span> <span class="dv">2000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-10" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># show top 2000 variable features</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">10</span>, <span class="at">repr.plot.height=</span><span class="dv">4</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">DefaultAssay</span>(obj) <span class="ot">&lt;-</span> assay</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">FindVariableFeatures</span>(obj, <span class="at">nfeatures =</span> nfeatures)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">VariableFeaturePlot</span>(obj) <span class="sc">+</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_text_repel</span>(<span class="at">data =</span> <span class="fu">VariableFeaturePlot</span>(obj)<span class="sc">$</span>data <span class="sc">%&gt;%</span> </span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">rownames_to_column</span>(<span class="st">"gene"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>        <span class="fu">slice_max</span>(<span class="at">n =</span> <span class="dv">10</span>, <span class="at">order_by =</span> variance.standardized) <span class="sc">%&gt;%</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">as.data.frame</span>(), <span class="fu">aes</span>(<span class="at">label =</span> gene))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Finding variable features for layer counts
+</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1.5_clustering_files/figure-html/cell-7-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="batch-correction" class="level2" data-number="7.5">
+<h2 data-number="7.5" class="anchored" data-anchor-id="batch-correction"><span class="header-section-number">7.5</span> Batch Correction</h2>
+<p>We will use Seurat V4 RPCA integration method to correct for batch effects between CV10 and CV12. See next section <span class="citation" data-cites="chapter-integration">[@chapter-integration]</span> on selecting and evaluating different integration methods.</p>
+<div id="cell-12" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># run wrapper function to perform seurat RPCA integraton</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">integrate_v4</span>(obj, <span class="at">split.by =</span> <span class="st">"samples"</span>, <span class="at">assay =</span> assay, <span class="at">nfeatures =</span> nfeatures, <span class="at">vars.to.regress =</span> <span class="fu">c</span>(<span class="st">"S.Score"</span>, <span class="st">"G2M.Score"</span>), <span class="at">method =</span> <span class="st">"rpca"</span>, <span class="at">k.weight =</span> <span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Running SCTransform on assay: RNA
+
+Running SCTransform on layer: counts
+
+vst.flavor='v2' set. Using model with fixed slope and excluding poisson genes.
+
+Variance stabilizing transformation of count matrix of size 21883 by 19484
+
+Model formula is y ~ log_umi
+
+Get Negative Binomial regression parameters per gene
+
+Using 2000 genes, 5000 cells
+
+Found 383 outliers - those will be ignored in fitting/regularization step
+
+
+Second step: Get residuals using fitted parameters for 21883 genes
+
+Computing corrected count matrix for 21883 genes
+
+Calculating gene attributes
+
+Wall clock passed: Time difference of 1.443835 mins
+
+Determine variable features
+
+Regressing out S.Score, G2M.Score
+
+Centering data matrix
+
+Getting residuals for block 1(of 4) for counts dataset
+
+Getting residuals for block 2(of 4) for counts dataset
+
+Getting residuals for block 3(of 4) for counts dataset
+
+Getting residuals for block 4(of 4) for counts dataset
+
+Centering data matrix
+
+Finished calculating residuals for counts
+
+Set default assay to SCT
+
+Running SCTransform on assay: RNA
+
+Running SCTransform on layer: counts
+
+vst.flavor='v2' set. Using model with fixed slope and excluding poisson genes.
+
+Variance stabilizing transformation of count matrix of size 14945 by 17366
+
+Model formula is y ~ log_umi
+
+Get Negative Binomial regression parameters per gene
+
+Using 2000 genes, 5000 cells
+
+Found 867 outliers - those will be ignored in fitting/regularization step
+
+
+Second step: Get residuals using fitted parameters for 14945 genes
+
+Computing corrected count matrix for 14945 genes
+
+Calculating gene attributes
+
+Wall clock passed: Time difference of 54.41101 secs
+
+Determine variable features
+
+Regressing out S.Score, G2M.Score
+
+Centering data matrix
+
+Getting residuals for block 1(of 4) for counts dataset
+
+Getting residuals for block 2(of 4) for counts dataset
+
+Getting residuals for block 3(of 4) for counts dataset
+
+Getting residuals for block 4(of 4) for counts dataset
+
+Centering data matrix
+
+Finished calculating residuals for counts
+
+Set default assay to SCT
+
+Computing within dataset neighborhoods
+
+Finding all pairwise anchors
+
+Projecting new data onto SVD
+
+Projecting new data onto SVD
+
+Finding neighborhoods
+
+Finding anchors
+
+    Found 2040 anchors
+
+sct.model: counts on 2000 cells: CV10_AAACCTGAGAAGCCCA-1 .. CV10_ACTATCTGTAGCGTAG-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+sct.model: counts on 2000 cells: CV10_ACTATCTGTATATGAG-1 .. CV10_ATGTGTGGTATTCTCT-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+sct.model: counts on 2000 cells: CV10_ATGTGTGGTCGACTAT-1 .. CV10_CATTATCAGGTCATCT-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+sct.model: counts on 2000 cells: CV10_CATTATCAGTACGATA-1 .. CV10_CGGAGTCTCTCTTGAT-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+sct.model: counts on 2000 cells: CV10_CGGAGTCTCTTAGCCC-1 .. CV10_CTTAACTTCGAATGGG-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+sct.model: counts on 2000 cells: CV10_CTTAACTTCGCCATAA-1 .. CV10_GCCTCTACAATCAGAA-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+sct.model: counts on 2000 cells: CV10_GCCTCTACACAGCCCA-1 .. CV10_GTACGTATCTGGTATG-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+sct.model: counts on 2000 cells: CV10_GTACTCCAGACTCGGA-1 .. CV10_TATCAGGTCTTGCATT-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+sct.model: counts on 2000 cells: CV10_TATCAGGTCTTGGGTA-1 .. CV10_TGGACGCAGCCCAATT-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+sct.model: counts on 1484 cells: CV10_TGGACGCAGCGACGTA-1 .. CV10_TTTGTCATCTTTAGGG-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+Warning message:
+“Different cells and/or features from existing assay SCT”
+sct.model: counts on 2000 cells: CV12_AAACCTGAGAGCCTAG-1 .. CV12_ACTTACTGTTTACTCT-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+sct.model: counts on 2000 cells: CV12_ACTTACTTCAATCACG-1 .. CV12_CAAGATCCAAGCTGTT-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+sct.model: counts on 2000 cells: CV12_CAAGATCCAATGAAAC-1 .. CV12_CCTAAAGGTGGAAAGA-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+sct.model: counts on 2000 cells: CV12_CCTAAAGGTGTCAATC-1 .. CV12_CTCACACAGGTACTCT-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+sct.model: counts on 2000 cells: CV12_CTCACACAGTGGGCTA-1 .. CV12_GATCGTATCACGGTTA-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+sct.model: counts on 2000 cells: CV12_GATCGTATCATACGGT-1 .. CV12_GGGATGACAGCTATTG-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+sct.model: counts on 2000 cells: CV12_GGGATGACAGCTCGCA-1 .. CV12_TACTTGTGTCGGCTCA-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+sct.model: counts on 2000 cells: CV12_TACTTGTGTCTCTTAT-1 .. CV12_TGCTGCTTCGCCCTTA-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+sct.model: counts on 1366 cells: CV12_TGCTGCTTCGGCGCTA-1 .. CV12_TTTGTCATCTGCCCTA-1
+
+Setting min_variance to:  0.04
+
+Calculating residuals of type pearson for 12868 genes
+
+Warning message:
+“Different cells and/or features from existing assay SCT”
+Merging dataset 2 into 1
+
+Extracting anchors for merged samples
+
+Finding integration vectors
+
+Finding integration vector weights
+
+Integrating data
+
+Warning message in asMethod(object):
+“sparse-&gt;dense coercion: allocating vector of size 4.1 GiB”
+Warning message:
+“Assay integrated changing from Assay to SCTAssay”
+Warning message:
+“Different cells and/or features from existing assay SCT”</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+[1] 1
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+  |======================================================================| 100%
+[1] 2</code></pre>
+</div>
+</div>
+</section>
+<section id="principal-component-analysis" class="level2" data-number="7.6">
+<h2 data-number="7.6" class="anchored" data-anchor-id="principal-component-analysis"><span class="header-section-number">7.6</span> Principal Component Analysis</h2>
+<div id="cell-14" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">5</span>, <span class="at">repr.plot.height=</span><span class="dv">4</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">RunPCA</span>(obj)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ElbowPlot</span>(obj, <span class="at">ndims =</span> <span class="dv">30</span>, <span class="at">reduction =</span> <span class="st">"pca"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>PC_ 1 
+Positive:  IL7R, MALAT1, RPS12, CD3E, LTB, RPS3, IL32, LEF1, TCF7, INPP4B 
+       ETS1, RPL5, EEF1A1, NKG7, CAMK4, RPL10, RPL13, NELL2, RPS27A, CCL5 
+       RPL3, IL2RG, RPL4, IFITM1, ITK, GNLY, CD69, PDE3B, DDX5, CD247 
+Negative:  LYZ, S100A9, FTL, IFI30, CD74, PSAP, FOS, S100A8, VCAN, FTH1 
+       CST3, FCN1, CTSS, SAT1, NAMPT, TYROBP, CYBB, AIF1, SERPINA1, HLA-DRA 
+       NEAT1, S100A6, TNFAIP2, VIM, MNDA, S100A11, PLXDC2, SPI1, CD36, S100A4 
+PC_ 2 
+Positive:  GNLY, NKG7, PRF1, CCL5, CTSW, CX3CR1, GZMB, FCGR3A, FGFBP2, CST7 
+       MYOM2, CD247, SPON2, KLRD1, IL2RB, SYNE1, GZMA, TGFBR3, FLNA, KLRF1 
+       ADGRG1, PRSS23, ITGB2, AOAH, GZMH, PTGDS, S1PR5, PFN1, SH2D1B, PYHIN1 
+Negative:  RPS12, RPLP1, RPL13, RPL10, RPS8, TPT1, IL7R, RPL32, AL138963.4, EEF2 
+       EEF1A1, RPL4, LTB, RPL11, RPS14, RPS18, RPL18A, RPL30, LEF1, RPS23 
+       RPS3A, RPS3, RPL28, RPLP0, RPS27A, RPS13, RPL19, RPL34, RPS15A, RPL29 
+PC_ 3 
+Positive:  CD74, BANK1, MS4A1, FCRL1, HLA-DRA, AFF3, RALGPS2, CD79A, HLA-DPB1, HLA-DQA1 
+       HLA-DPA1, HLA-DRB1, LINC00926, HLA-DQB1, ADAM28, PAX5, BLK, FCRLA, CDK14, NIBAN3 
+       EBF1, SWAP70, RUBCNL, COBLL1, P2RX5, MEF2C, CD79B, AC120193.1, SPIB, HLA-DRB5 
+Negative:  S100A9, S100A8, LYZ, VCAN, FOS, IL7R, S100A12, LEF1, TCF7, CD3E 
+       FYB1, FCN1, INPP4B, NELL2, CAMK4, IL32, NAMPT, VIM, TPT1, FTL 
+       RPS12, ANXA1, PDE3B, CD5, G0S2, THEMIS, ITK, TESPA1, GIMAP4, TNFAIP3 
+PC_ 4 
+Positive:  S100A9, S100A8, LYZ, VCAN, FOS, BANK1, S100A12, MS4A1, FCRL1, AFF3 
+       RALGPS2, PLAUR, PLBD1, G0S2, JUN, IER2, CSF3R, ACSL1, IER3, ARHGAP26 
+       CD79A, NAIP, SLC2A3, NCF1, LINC00926, THBS1, CD36, PTPRE, NAMPT, PLCB1 
+Negative:  PSAP, FCGR3A, IFITM3, IFI30, MS4A7, TCF7L2, PECAM1, SERPINA1, AIF1, FTL 
+       LST1, CSF1R, FTH1, WARS, CST3, LILRB2, SIGLEC10, FCER1G, MTSS1, HMOX1 
+       LRRC25, CD68, S100A4, CDKN1C, SAT1, LYN, COTL1, ACTB, TMSB4X, LILRB1 
+PC_ 5 
+Positive:  GNLY, NKG7, LYZ, RPLP1, RPL10, S100A8, S100A9, RPS12, RPL13, B2M 
+       PRF1, RPL32, RPL29, RPL11, CCL5, TMSB4X, RPS18, RPL41, RPS14, RPL18 
+       RPS27A, RPL28, RPS15A, RPL30, FTL, RPS3, RPS23, RPL19, RPS8, CTSW 
+Negative:  MALAT1, NEAT1, LYN, MT-ND6, TCF7L2, MT-CO1, INPP4B, SLC8A1, MS4A7, PECAM1 
+       NAMPT, MAML2, FOXP1, IL7R, DPYD, NFKBIZ, MT-CYB, CAMK4, ARHGAP15, PSAP 
+       UTRN, MAP3K1, NELL2, MTSS1, LEF1, SMCHD1, IL6ST, FYB1, TCF7, DMXL2 
+</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1.5_clustering_files/figure-html/cell-9-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="umap-projection" class="level2" data-number="7.7">
+<h2 data-number="7.7" class="anchored" data-anchor-id="umap-projection"><span class="header-section-number">7.7</span> UMAP Projection</h2>
+<div id="cell-16" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">RunUMAP</span>(obj, <span class="at">dims =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">7</span>, <span class="at">reduction =</span> <span class="st">"pca"</span>, <span class="at">reduction.name =</span> <span class="st">"umap"</span>, <span class="at">assay =</span> <span class="st">"integrated"</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning message:
+“The default method for RunUMAP has changed from calling Python UMAP via reticulate to the R-native UWOT using the cosine metric
+To use Python UMAP via reticulate, set umap.method to 'umap-learn' and metric to 'correlation'
+This message will be shown once per session”
+Found more than one class "dist" in cache; using the first, from namespace 'BiocGenerics'
+
+Also defined by ‘spam’
+
+Found more than one class "dist" in cache; using the first, from namespace 'BiocGenerics'
+
+Also defined by ‘spam’
+</code></pre>
+</div>
+</div>
+<div id="cell-17" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">20</span>, <span class="at">repr.plot.height=</span><span class="dv">5</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="fu">scUMAP</span>(obj, <span class="at">reduction =</span> <span class="st">"umap"</span>, <span class="at">group.by =</span> <span class="st">"samples"</span>, <span class="at">count =</span> T)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> <span class="fu">scUMAP</span>(obj, <span class="at">reduction =</span> <span class="st">"umap"</span>, <span class="at">group.by =</span> <span class="st">"softqc"</span>, <span class="at">count =</span> T)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>p3 <span class="ot">&lt;-</span> <span class="fu">scUMAP</span>(obj, <span class="at">reduction =</span> <span class="st">"umap"</span>, <span class="at">group.by =</span> <span class="st">"MULTI.global"</span>, <span class="at">count =</span> T)</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>p4 <span class="ot">&lt;-</span> <span class="fu">scUMAP</span>(obj, <span class="at">reduction =</span> <span class="st">"umap"</span>, <span class="at">group.by =</span> <span class="st">"finalqc"</span>, <span class="at">count =</span> T)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_grid</span>(p1, p2, p3, p4, <span class="at">ncol =</span> <span class="dv">4</span>, <span class="at">align =</span> <span class="st">"hv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1.5_clustering_files/figure-html/cell-11-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="find-clusters" class="level2" data-number="7.8">
+<h2 data-number="7.8" class="anchored" data-anchor-id="find-clusters"><span class="header-section-number">7.8</span> Find Clusters</h2>
+<div id="cell-19" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">FindNeighbors</span>(obj, <span class="at">reduction =</span> <span class="st">"pca"</span>, <span class="at">dims =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">7</span>, <span class="at">verbose =</span> F)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="louvain-algorithm" class="level3" data-number="7.8.1">
+<h3 data-number="7.8.1" class="anchored" data-anchor-id="louvain-algorithm"><span class="header-section-number">7.8.1</span> Louvain Algorithm</h3>
+<div id="cell-21" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">FindClusters</span>(obj, <span class="at">resolution =</span> <span class="fu">seq</span>(<span class="fl">0.1</span>, <span class="dv">1</span>, <span class="fl">0.1</span>), <span class="at">algorithm =</span> <span class="dv">1</span>, <span class="at">verbose =</span> F)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-22" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>cols <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"integrated_snn_res."</span>, <span class="fu">seq</span>(<span class="fl">0.1</span>, <span class="dv">1</span>, <span class="fl">0.1</span>))</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> cols){</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    obj<span class="sc">@</span>meta.data[[<span class="fu">gsub</span>(<span class="st">"integrated_snn_res."</span>, <span class="st">"louvain_"</span>, i)]] <span class="ot">&lt;-</span> obj<span class="sc">@</span>meta.data[[i]]</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    obj<span class="sc">@</span>meta.data[[i]] <span class="ot">&lt;-</span> <span class="cn">NULL</span>}</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>clustree <span class="ot">&lt;-</span> <span class="fu">clustree</span>(obj<span class="sc">@</span>meta.data, <span class="at">prefix =</span> <span class="fu">paste0</span>(<span class="st">"louvain_"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-23" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">15</span>, <span class="at">repr.plot.height=</span><span class="dv">10</span>)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(clustree)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1.5_clustering_files/figure-html/cell-15-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-24" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">6</span>, <span class="at">repr.plot.height=</span><span class="dv">4</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">scUMAP</span>(obj, <span class="at">reduction =</span> <span class="st">"umap"</span>, <span class="at">group.by =</span> <span class="st">"louvain_0.2"</span>, <span class="at">count =</span> T, <span class="at">pt.size =</span> <span class="fl">1.2</span>, <span class="at">cols =</span> palette_list[[<span class="st">"vega_10"</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Scale for colour is already present.
+Adding another scale for colour, which will replace the existing scale.
+Scale for colour is already present.
+Adding another scale for colour, which will replace the existing scale.</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1.5_clustering_files/figure-html/cell-16-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="leiden-algorithm" class="level3" data-number="7.8.2">
+<h3 data-number="7.8.2" class="anchored" data-anchor-id="leiden-algorithm"><span class="header-section-number">7.8.2</span> Leiden Algorithm</h3>
+<p>Leiden algorithm has been shown to outperform traditional louvain algorithm (see <a href="">citation</a>).</p>
+<div id="cell-26" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">use_condaenv</span>(<span class="st">"/camp/home/hungm/.conda/envs/r-reticulate"</span>)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">FindClusters</span>(obj, <span class="at">resolution =</span> <span class="fu">seq</span>(<span class="fl">0.1</span>, <span class="dv">1</span>, <span class="fl">0.1</span>), <span class="at">algorithm =</span> <span class="dv">4</span>, <span class="at">verbose =</span> F)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning message in asMethod(object):
+“sparse-&gt;dense coercion: allocating vector of size 10.1 GiB”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in paste("reticulate", module, "load", sep = "::"):
+“NAs introduced by coercion to integer range”
+Warning message in asMethod(object):
+“sparse-&gt;dense coercion: allocating vector of size 10.1 GiB”
+Warning message in asMethod(object):
+“sparse-&gt;dense coercion: allocating vector of size 10.1 GiB”
+Warning message in asMethod(object):
+“sparse-&gt;dense coercion: allocating vector of size 10.1 GiB”
+Warning message in asMethod(object):
+“sparse-&gt;dense coercion: allocating vector of size 10.1 GiB”
+Warning message in asMethod(object):
+“sparse-&gt;dense coercion: allocating vector of size 10.1 GiB”
+Warning message in asMethod(object):
+“sparse-&gt;dense coercion: allocating vector of size 10.1 GiB”
+Warning message in asMethod(object):
+“sparse-&gt;dense coercion: allocating vector of size 10.1 GiB”
+Warning message in asMethod(object):
+“sparse-&gt;dense coercion: allocating vector of size 10.1 GiB”
+Warning message in asMethod(object):
+“sparse-&gt;dense coercion: allocating vector of size 10.1 GiB”</code></pre>
+</div>
+</div>
+<div id="cell-27" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>cols <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"integrated_snn_res."</span>, <span class="fu">seq</span>(<span class="fl">0.1</span>, <span class="dv">1</span>, <span class="fl">0.1</span>))</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> cols){</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    obj<span class="sc">@</span>meta.data[[<span class="fu">gsub</span>(<span class="st">"integrated_snn_res."</span>, <span class="st">"leiden_"</span>, i)]] <span class="ot">&lt;-</span> obj<span class="sc">@</span>meta.data[[i]]</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    obj<span class="sc">@</span>meta.data[[i]] <span class="ot">&lt;-</span> <span class="cn">NULL</span>}</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>clustree <span class="ot">&lt;-</span> <span class="fu">clustree</span>(obj<span class="sc">@</span>meta.data, <span class="at">prefix =</span> <span class="fu">paste0</span>(<span class="st">"leiden_"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-28" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">15</span>, <span class="at">repr.plot.height=</span><span class="dv">10</span>)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(clustree)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1.5_clustering_files/figure-html/cell-19-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-29" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">6</span>, <span class="at">repr.plot.height=</span><span class="dv">4</span>)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">scUMAP</span>(obj, <span class="at">reduction =</span> <span class="st">"umap"</span>, <span class="at">group.by =</span> <span class="st">"leiden_0.2"</span>, <span class="at">count =</span> T, <span class="at">pt.size =</span> <span class="fl">1.2</span>, <span class="at">cols =</span> palette_list[[<span class="st">"vega_20"</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Scale for colour is already present.
+Adding another scale for colour, which will replace the existing scale.
+Scale for colour is already present.
+Adding another scale for colour, which will replace the existing scale.</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1.5_clustering_files/figure-html/cell-20-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-30" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qsave</span>(obj, <span class="st">"seurat/1_processing/1.5_GSE247917_clustering.qs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="session-info" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="session-info">Session Info</h2>
+<div id="cell-32" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>R version 4.3.2 (2023-10-31)
+Platform: x86_64-conda-linux-gnu (64-bit)
+Running under: Rocky Linux 8.7 (Green Obsidian)
+
+Matrix products: default
+BLAS/LAPACK: /nemo/lab/caladod/working/Matthew/.conda/envs/seurat5/lib/libopenblasp-r0.3.23.so;  LAPACK version 3.11.0
+
+locale:
+ [1] LC_CTYPE=en_GB.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_GB.UTF-8        LC_COLLATE=en_GB.UTF-8    
+ [5] LC_MONETARY=en_GB.UTF-8    LC_MESSAGES=en_GB.UTF-8   
+ [7] LC_PAPER=en_GB.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_GB.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Europe/London
+tzcode source: system (glibc)
+
+attached base packages:
+[1] stats4    grid      stats     graphics  grDevices utils     datasets 
+[8] methods   base     
+
+other attached packages:
+ [1] scUnify_0.0.0.9000          ComplexHeatmap_2.16.0      
+ [3] DoubletFinder_2.0.4         scDblFinder_1.14.0         
+ [5] celda_1.16.1                Matrix_1.6-1               
+ [7] SingleCellExperiment_1.24.0 SummarizedExperiment_1.32.0
+ [9] Biobase_2.62.0              GenomicRanges_1.54.1       
+[11] GenomeInfoDb_1.38.0         IRanges_2.36.0             
+[13] S4Vectors_0.40.1            BiocGenerics_0.48.0        
+[15] MatrixGenerics_1.14.0       matrixStats_1.0.0          
+[17] UCell_2.4.0                 BiocParallel_1.36.0        
+[19] biomaRt_2.58.0              ggh4x_0.2.5                
+[21] harmony_1.1.0               Rcpp_1.0.11                
+[23] Seurat_5.0.0                SeuratObject_5.0.0         
+[25] sp_2.1-1                    ggpubr_0.6.0               
+[27] rstatix_0.7.2               writexl_1.4.2              
+[29] readxl_1.4.3                qs_0.26.3                  
+[31] RColorBrewer_1.1-3          wesanderson_0.3.6.9000     
+[33] viridis_0.6.4               viridisLite_0.4.2          
+[35] gridExtra_2.3               scales_1.3.0               
+[37] cowplot_1.1.1               patchwork_1.2.0            
+[39] ggrepel_0.9.4               lubridate_1.9.3            
+[41] forcats_1.0.0               stringr_1.5.0              
+[43] dplyr_1.1.4                 purrr_1.0.2                
+[45] readr_2.1.4                 tidyr_1.3.0                
+[47] tibble_3.2.1                ggplot2_3.5.1              
+[49] tidyverse_2.0.0            
+
+loaded via a namespace (and not attached):
+  [1] spatstat.sparse_3.0-3      bitops_1.0-7              
+  [3] httr_1.4.7                 doParallel_1.0.17         
+  [5] repr_1.1.6                 tools_4.3.2               
+  [7] sctransform_0.4.1          backports_1.4.1           
+  [9] utf8_1.2.4                 R6_2.5.1                  
+ [11] lazyeval_0.2.2             uwot_0.1.16               
+ [13] GetoptLong_1.0.5           withr_3.0.1               
+ [15] prettyunits_1.2.0          progressr_0.14.0          
+ [17] cli_3.6.1                  spatstat.explore_3.2-5    
+ [19] fastDummies_1.7.3          enrichR_3.2               
+ [21] assertive.files_0.0-2      spatstat.data_3.0-3       
+ [23] ggridges_0.5.4             pbapply_1.7-2             
+ [25] Rsamtools_2.18.0           pbdZMQ_0.3-9              
+ [27] scater_1.28.0              parallelly_1.36.0         
+ [29] WriteXLS_6.4.0             limma_3.56.2              
+ [31] RSQLite_2.3.2              BiocIO_1.12.0             
+ [33] RApiSerialize_0.1.2        generics_0.1.3            
+ [35] gridGraphics_0.5-1         shape_1.4.6               
+ [37] combinat_0.0-8             ica_1.0-3                 
+ [39] spatstat.random_3.2-1      car_3.1-2                 
+ [41] ggbeeswarm_0.7.2           fansi_1.0.6               
+ [43] abind_1.4-5                lifecycle_1.0.3           
+ [45] edgeR_3.42.4               yaml_2.3.7                
+ [47] carData_3.0-5              SparseArray_1.2.0         
+ [49] BiocFileCache_2.10.1       Rtsne_0.16                
+ [51] blob_1.2.4                 dqrng_0.3.1               
+ [53] promises_1.2.1             crayon_1.5.2              
+ [55] miniUI_0.1.1.1             lattice_0.21-8            
+ [57] beachmat_2.18.0            KEGGREST_1.42.0           
+ [59] magick_2.8.1               metapod_1.8.0             
+ [61] pillar_1.9.0               rjson_0.2.21              
+ [63] xgboost_1.7.7.1            future.apply_1.11.0       
+ [65] codetools_0.2-19           leiden_0.4.3              
+ [67] glue_1.8.0                 data.table_1.14.8         
+ [69] vctrs_0.6.4                png_0.1-8                 
+ [71] spam_2.10-0                cellranger_1.1.0          
+ [73] gtable_0.3.4               cachem_1.0.8              
+ [75] S4Arrays_1.2.0             mime_0.12                 
+ [77] RcppEigen_0.3.3.9.3        survival_3.5-7            
+ [79] iterators_1.0.14           statmod_1.5.0             
+ [81] bluster_1.10.0             ellipsis_0.3.2            
+ [83] fitdistrplus_1.1-11        ROCR_1.0-11               
+ [85] nlme_3.1-163               bit64_4.0.5               
+ [87] progress_1.2.2             filelock_1.0.2            
+ [89] RcppAnnoy_0.0.21           irlba_2.3.5.1             
+ [91] vipor_0.4.5                KernSmooth_2.23-22        
+ [93] colorspace_2.1-0           DBI_1.1.3                 
+ [95] tidyselect_1.2.0           bit_4.0.5                 
+ [97] compiler_4.3.2             curl_5.1.0                
+ [99] BiocNeighbors_1.18.0       assertive.properties_0.0-5
+[101] xml2_1.3.5                 DelayedArray_0.28.0       
+[103] plotly_4.10.3              rtracklayer_1.62.0        
+[105] stringfish_0.16.0          lmtest_0.9-40             
+[107] rappdirs_0.3.3             digest_0.6.33             
+[109] goftest_1.2-3              spatstat.utils_3.0-5      
+[111] XVector_0.42.0             htmltools_0.5.6.1         
+[113] pkgconfig_2.0.3            assertive.numbers_0.0-2   
+[115] base64enc_0.1-3            sparseMatrixStats_1.14.0  
+[117] dbplyr_2.4.0               fastmap_1.1.1             
+[119] rlang_1.1.4                GlobalOptions_0.1.2       
+[121] htmlwidgets_1.6.2          DelayedMatrixStats_1.24.0 
+[123] shiny_1.7.5.1              zoo_1.8-12                
+[125] jsonlite_1.8.7             mclust_6.0.1              
+[127] BiocSingular_1.16.0        RCurl_1.98-1.12           
+[129] magrittr_2.0.3             scuttle_1.10.3            
+[131] GenomeInfoDbData_1.2.11    dotCall64_1.1-0           
+[133] multipanelfigure_2.1.2     IRkernel_1.3.2            
+[135] munsell_0.5.0              reticulate_1.34.0         
+[137] stringi_1.7.12             assertive.base_0.0-9      
+[139] MCMCprecision_0.4.0        zlibbioc_1.48.0           
+[141] MASS_7.3-60                plyr_1.8.9                
+[143] parallel_4.3.2             listenv_0.9.0             
+[145] deldir_1.0-9               Biostrings_2.70.1         
+[147] IRdisplay_1.1              splines_4.3.2             
+[149] tensor_1.5                 hms_1.1.3                 
+[151] circlize_0.4.15            locfit_1.5-9.8            
+[153] igraph_1.5.1               uuid_1.1-1                
+[155] spatstat.geom_3.2-7        ggsignif_0.6.4            
+[157] RcppHNSW_0.5.0             ScaledMatrix_1.8.1        
+[159] reshape2_1.4.4             XML_3.99-0.14             
+[161] evaluate_0.23              scran_1.28.2              
+[163] RcppParallel_5.1.7         tzdb_0.4.0                
+[165] foreach_1.5.2              httpuv_1.6.12             
+[167] RANN_2.6.1                 polyclip_1.10-6           
+[169] future_1.33.0              clue_0.3-64               
+[171] scattermore_1.2            rsvd_1.0.5                
+[173] broom_1.0.5                assertive.types_0.0-3     
+[175] xtable_1.8-4               restfulr_0.0.15           
+[177] RSpectra_0.16-1            dsb_1.0.4                 
+[179] later_1.3.1                beeswarm_0.4.0            
+[181] GenomicAlignments_1.38.0   memoise_2.0.1             
+[183] AnnotationDbi_1.64.0       cluster_2.1.4             
+[185] timechange_0.2.0           globals_0.16.2            </code></pre>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../sections/1_processing/1.4_qualitycontrol.html" class="pagination-link  aria-label=" &lt;span="" control&lt;="" span&gt;"="">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Quality Control</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../sections/1_processing/1.6_integration.html" class="pagination-link" aria-label="<span class='chapter-number'>8</span>&nbsp; <span class='chapter-title'>Data Integration</span>">
+        <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Data Integration</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

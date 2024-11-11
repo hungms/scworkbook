@@ -34,5 +34,17 @@
   },
   "sections/1_processing/1.6_doublets.ipynb": {
     "1.6_doublets.html": "54771b75"
+  },
+  "sections/1_processing/1.5_doublets.ipynb": {
+    "1.5_doublets.html": "1ad1e759"
+  },
+  "sections/1_processing/1.7_doublets.ipynb": {
+    "1.7_doublets.html": "bbcb17a5"
+  },
+  "sections/1_processing/1.6_integration.ipynb": {
+    "1.6_integration.html": "1662331e"
+  },
+  "sections/1_processing/1.5_clustering.ipynb": {
+    "1.5_clustering.html": "f8cf1029"
   }
 }
